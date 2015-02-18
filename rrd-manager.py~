@@ -6,7 +6,7 @@ import time
 class RRDManager(object):
 
 	def getActualTime(self):
-		return int(math.floor(time.time()));
+		return math.floor(time.time());
 
 	def __init__(self, filename, device):
 		# define rrd filename
