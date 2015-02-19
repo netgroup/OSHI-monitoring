@@ -45,9 +45,10 @@ class SimpleMonitor(app_manager.RyuApp):
 		ofproto = datapath.ofproto
 		parser = datapath.ofproto_parser
 		cookie = cookie_mask = 0
+		match = parser.OFPMatch(eth_type=0x0800)
 		req = parser.OFPFlowStatsRequest(datapath, 0,
                                          ofproto.OFPTT_ALL,
-                                         ofproto.OFPP_ANY, ofproto.OFPG_ANY)
+                                         ofproto.OFPP_ANY, ofproto.OFPG_ANY,cookie,cookie_mask)
 		datapath.send_msg(req)
 		req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
 		datapath.send_msg(req)
@@ -65,8 +66,37 @@ class SimpleMonitor(app_manager.RyuApp):
 		for stat in body:
 			'''per ogni flusso sottomettere tramite chiamata REST le informazioni composte da DataPathId, portName (outPort),pktCount,ethType
 				usare getPname per trasformare il numero di outport nel nome della outport '''
+			InEthType=0
+			InPortNumber=0
+			for OXMTlv in stat.match.fields:
+				if type(OXMTlv).__name__=='MTEthType':
+					InEthType=OXMTlv.value
+				if type(OXMTlv).__name__=='MTInPort':
+					InPortNumber=OXMTlv.value
+		
+			inPortName=self.getPname(ev.msg.datapath.id,InPortNumber)
+			OutEthType=InEthType
+			for OFPInstructionActions in stat.instructions:
+
+				if type(OFPInstructionActions).__name__=="OFPInstructionGotoTable":
+					continue
+
+				for action in OFPInstructionActions.actions:
+
+					if type(action).__name__=="OFPActionPushMpls" or type(action).__name__=="OFPActionPopMpls":
+						OutEthType=action.ethertype
+				
+				for action in OFPInstructionActions.actions:
+					if type(action).__name__!="OFPActionOutput":
+						continue
+					if action.type!=0 : OutEthType=action.type
+					outPortNumber=action.port
+					outPortName=self.getPname(ev.msg.datapath.id,outPortNumber)
+					if InPortNumber==0 or outPortNumber==0: continue
+					if InEthType==0x0800 or OutEthType==0x0800:
+						flows.append('PacketCount=%d ' 'ByteCount=%d ' 'InEthType=%d ' 'InPortName=%s ' 'OutEthType=%d ' 'OutPortName=%s ' % (stat.packet_count, stat.byte_count, InEthType,inPortName,OutEthType,outPortName))
 			
-			flows.append(
+			'''flows.append(
 						'--------------------------------------------------- %016x \n\n'
 						'table_id=%s \n'
 						'duration_sec=%d duration_nsec=%d \n'
@@ -80,7 +110,7 @@ class SimpleMonitor(app_manager.RyuApp):
 						stat.priority,
 						stat.idle_timeout, stat.hard_timeout, stat.flags,
 						stat.cookie, stat.packet_count, stat.byte_count,
-						stat.match, stat.instructions))
+						stat.match, stat.instructions))'''
 		print "\n".join(flows)
 
 	@set_ev_cls(ofp_event.EventOFPStateChange,[MAIN_DISPATCHER, DEAD_DISPATCHER])
