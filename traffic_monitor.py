@@ -142,14 +142,23 @@ class SimpleMonitor(app_manager.RyuApp):
 						#flows.append('PacketCount=%d ' 'ByteCount=%d ' 'InEthType=%d ' 'InPortName=%s ' 'OutEthType=%d ' 'OutPortName=%s ' % (stat.packet_count, stat.byte_count, InEthType,inPortName,OutEthType,outPortName))	
 		
 		if rxdatasources:
-			print "updating rx flow for "+datapathidstr+" port: "+str(rxdatasources)+" data: "+str(rxdata)
+			print "updating rx flow for "+datapathidstr+" port: "+str(rxdatasources)+" data: "+str(rxdata)+" file: "+ rrdmanagerrx.filename
 			print "\n"
-			rrdmanagerrx.update(rxdatasources,rxdata)
+			try:
+				rrdmanagerrx.update(rxdatasources,rxdata)
+			except:
+				time.sleep(1)
+				rrdmanagerrx.update(rxdatasources,rxdata)
 		
 		if txdatasources:
-			print "updating tx flow for "+datapathidstr+" port: "+str(txdatasources)+" data: "+str(txdata)
+			print "updating tx flow for "+datapathidstr+" port: "+str(txdatasources)+" data: "+str(txdata)+" file: "+ rrdmanagertx.filename
 			print "\n"
-			rrdmanagertx.update(txdatasources,txdata)			
+			try:
+				rrdmanagertx.update(txdatasources,txdata)
+			except:
+				time.sleep(1)
+				rrdmanagertx.update(txdatasources,txdata)
+
 		
 		'''flows.append(
 						'--------------------------------------------------- %016x \n\n'
@@ -239,13 +248,23 @@ class SimpleMonitor(app_manager.RyuApp):
 			txdata.append(stat.tx_packets);
 
 
-		print "updating tx data for "+datapathidstr+" ds: "+str(txdatasources)+" data: "+str(txdata)
+		print "updating tx data for "+datapathidstr+" ds: "+str(txdatasources)+" data: "+str(txdata)+" file: "+ rrdmanagertx.filename
 		print "\n"
-		rrdmanagertx.update(txdatasources,txdata)
-		print "updating rx data for "+datapathidstr+" ds: "+str(rxdatasources)+" data: "+str(rxdata)
-		print "\n"
-		rrdmanagerrx.update(rxdatasources,rxdata)
+		try:
+			rrdmanagertx.update(txdatasources,txdata)
+		except:
+			time.sleep(1)
+			rrdmanagertx.update(txdatasources,txdata)
+			pass
 
+		print "updating rx data for "+datapathidstr+" ds: "+str(rxdatasources)+" data: "+str(rxdata)+" file: "+ rrdmanagerrx.filename
+		print "\n"
+		try:
+			rrdmanagerrx.update(rxdatasources,rxdata)
+		except:
+			time.sleep(1)
+			rrdmanagerrx.update(rxdatasources,rxdata)
+			pass
 			#time.sleep(1)
 '''
 			self.logger.warning('%016x %s %8d %8d %8d %8d %8d %8d',
