@@ -4,7 +4,23 @@ import math
 import time
 
 class RRDManager(object):
-
+    #COSTANTI RRD------
+	XFF1="0.5"
+	XFF2="0.5"
+	XFF3="0.5"
+	XFF4="0.5"
+	XFF5="0.5"
+	STEP1="1"
+	STEP2="6"
+	STEP3="12"
+	STEP4="288"
+	STEP5="2016"
+	ROWS1="24"
+	ROWS2="10"
+	ROWS3="24"
+	ROWS4="7"
+	ROWS5="4"
+	#--------------
 	def getActualTime(self):
 		return int(math.floor(time.time()))
 
@@ -37,11 +53,11 @@ class RRDManager(object):
 		               '--start',
 		               str(self.getActualTime()),
 		               self.data_sources,
-		               'RRA:AVERAGE:0.5:1:24',	 #i dati raccolti ogni 5 minuti per 2 ore
-		               'RRA:AVERAGE:0.5:6:10',	 #i dati raccolti ogni 30 minuti per 5 ore
-		               'RRA:AVERAGE:0.5:12:24',	 #i dati raccolti ogni ora per un giorno
-			       'RRA:AVERAGE:0.5:288:7',  #i dati raccolti ogni giorno per una settimana
-			       'RRA:AVERAGE:0.5:2016:4') #i dati raccolti ogni settimana per 4 settimane
+		               'RRA:AVERAGE:'+XFF1+':'+STEP1+':'+ROWS1,	 #i dati raccolti ogni 5 minuti per 2 ore
+		               'RRA:AVERAGE:'+XFF2+':'+STEP2+':'+ROWS2,	 #i dati raccolti ogni 30 minuti per 5 ore
+		               'RRA:AVERAGE:'+XFF3+':'+STEP3+':'+ROWS3,	 #i dati raccolti ogni ora per un giorno
+			       'RRA:AVERAGE:'+XFF4+':'+STEP4+':'+ROWS4,  #i dati raccolti ogni giorno per una settimana
+			       'RRA:AVERAGE:'+XFF5+':'+STEP5+':'+ROWS5) #i dati raccolti ogni settimana per 4 settimane
 		print self.raw_data_sources
 	
 	# insert values w/ timestamp NOW for a set of given DS
