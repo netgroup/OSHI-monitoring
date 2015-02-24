@@ -122,9 +122,14 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # modify behavior of the physical port
 # POST /stats/portdesc/modify
 #
-#
 # send a experimeter message
 # POST /stats/experimenter/<dpid>
+#
+# request list of rrd databases
+# GET /stats/listdb
+#
+# fetch data of requested database "filename", between "start" and "end" time expressed in unix time.
+# GET stats/rrdview/{filename}/{start}/{end}
 
 
 class StatsController(ControllerBase):
