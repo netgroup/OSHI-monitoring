@@ -28,5 +28,7 @@
     
     sudo ./mininet_deployer.py --topology topo/topo_vll_pw.json
     ```
-4. Open terminal for a controller in the topology: `mininet> xterm ctr8`
-5. Start RYU Manager (in the controller terminal): `ryu-manager --observe-links traffic_monitor.py ofct_rest.py rrdmanager.py`
+4. Open terminal for a controller in the topology:
+    ```mininet> xterm ctr8```
+5. Start RYU Manager (in the controller terminal):
+    ```ryu-manager --observe-links traffic_monitor.py ofct_rest.py rrdmanager.py```
