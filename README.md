@@ -16,8 +16,6 @@
     
     sudo python ./setup.py install
     
-    cd ryu/app
-    
     sudo apt-get install rrdtool librrds-perl librrd-dev
     
     sudo pip install rrdtool
@@ -31,4 +29,19 @@
 4. Open terminal for a controller in the topology:
     ```mininet> xterm ctr8```
 5. Start RYU Manager (in the controller terminal):
-    ```ryu-manager --observe-links traffic_monitor.py ofct_rest.py rrdmanager.py```
+    ```
+    cd /home/user/workspace/tpin-2015-project
+    
+    ryu-manager --observe-links traffic_monitor.py ofctl_rest.py rrdmanager.py
+    
+    ```
+
+## Test REST interface
+You can call each REST endpoint implemented in ofctl_rest.py. The server runs on port 8080.
+
+### Example
+```
+curl http://10.0.4.1:8080/stats/switches
+```
+*Note that 10.0.4.1 is the IP of the machine where ryu-manager is running.*
+
