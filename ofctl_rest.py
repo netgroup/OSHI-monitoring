@@ -1,18 +1,3 @@
-# Copyright (C) 2012 Nippon Telegraph and Telephone Corporation.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import logging
 
 import json
@@ -141,7 +126,7 @@ class StatsController(ControllerBase):
     def get_dpids(self, req, **_kwargs):
         dps = self.dpset.dps.keys()
         body = json.dumps(dps)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_desc_stats(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -159,7 +144,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(desc)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_flow_stats(self, req, dpid, **_kwargs):
         if req.body == '':
@@ -186,7 +171,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(flows)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_port_stats(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -204,7 +189,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(ports)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_meter_features(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -222,7 +207,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(meters)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_meter_config(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -240,7 +225,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(meters)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_meter_stats(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -258,7 +243,7 @@ class StatsController(ControllerBase):
             return Response(status=501)
 
         body = json.dumps(meters)
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     def get_group_features(self, req, dpid, **_kwargs):
         dp = self.dpset.get(int(dpid))
@@ -513,7 +498,7 @@ class StatsController(ControllerBase):
             ofctl_v1_2.send_experimenter(dp, exp)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.send_experimenter(dp, exp)
-        elif do.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
+        elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -555,13 +540,13 @@ class StatsController(ControllerBase):
 
             for temp in data:
                 body += str(temp) + '\n';
-        except Exception, e:
+        except Exception as e:
             body = str(e)
             pass
 
         body += '\n'
 
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
     '''
     Chiamata REST che lista i Database RRD presenti nella cartella corrente.
@@ -576,7 +561,7 @@ class StatsController(ControllerBase):
             if dbentry.endswith('.rrd'):
                 body += str(dbentry) + "\n"
 
-        return (Response(content_type='application/json', body=body))
+        return Response(content_type='application/json', body=body)
 
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
