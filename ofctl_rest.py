@@ -199,7 +199,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_features(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -217,7 +217,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_config(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -235,7 +235,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -398,7 +398,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_meter_entry(dp, flow, cmd)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -510,30 +510,27 @@ class StatsController(ControllerBase):
     ''' 
     Chiamata REST che recupera i dati da un Database RR.
     L'output si trova nel 'body' della risposta. Va interpretato come segue:
-        - La prima riga rappresenta il vettore contenente i parametri di
-
-            (start time, end time, step)
-        
+        - La prima riga rappresenta il vettore contenente i parametri di (start time, end time, step)
         - La seconda riga contiene i nomi dei datasource all'interno del Database
-        - La terza riga e' il vettore contenente le associazioni
-
-            (valore, tempo)
+        - La terza riga e' il vettore contenente le associazioni (valore, tempo)
 
     Tali valori sono calcolati eseguendo le medie nei vari intervalli di tempo e sulla base dei campioni raccolti.
 
     I parametri da passare alla chiamata REST sono i seguenti tre:
         1) 'filename' : il nome del file in cui e' contenuto il Database
-        2) 'start'    : il tempo di inizio, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX), dell'osservazione
-        3) 'end'      : il tempo di fine, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX), dell'osservazione
+        2) 'start'    : il tempo di inizio, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX),
+            dell'osservazione
+        3) 'end'      : il tempo di fine, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX),
+            dell'osservazione
 
-    Qualora uno dei tempi non fosse specificato, allora la chiamata prenderebbe in automatico il valore 'N' che sta per 'NOW'
-    (ovvero il tempo corrente).
+    Qualora uno dei tempi non fosse specificato, allora la chiamata prenderebbe in automatico il valore 'N' che sta per
+    'NOW' (ovvero il tempo corrente).
     '''
     def rrdviewer(self, req, **_kwargs):
         filename = _kwargs.get('filename', 'empty')
         start_time = _kwargs.get('start', 'N')
         end_time = _kwargs.get('end', 'N')
-        body = '';
+        body = ''
 
         try:
             data = rrdtool.fetch(str(filename), 'AVERAGE', '--start', str(start_time), '--end', str(end_time))
@@ -547,6 +544,16 @@ class StatsController(ControllerBase):
         body += '\n'
 
         return Response(content_type='application/json', body=body)
+
+    def get_rrdgraph(self, **_kwargs):
+        filename = _kwargs.get('filename', 'empty')
+        switch_id = _kwargs.get('switch_id', 'empty')
+        port_id = _kwargs.get('port_id', 'empty')
+        protocol = _kwargs.get('protocol', 'empty')
+        start_time = _kwargs.get('start', 'N')
+        end_time = _kwargs.get('end', 'N')
+        scale = _kwargs.get('scale', 'empty')
+        body = ''
 
     '''
     Chiamata REST che lista i Database RRD presenti nella cartella corrente.
@@ -562,6 +569,7 @@ class StatsController(ControllerBase):
                 body += str(dbentry) + "\n"
 
         return Response(content_type='application/json', body=body)
+
 
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
