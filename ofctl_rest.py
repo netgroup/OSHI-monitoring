@@ -546,32 +546,39 @@ class StatsController(ControllerBase):
         return Response(content_type='application/json', body=body)
 
     def get_rrdgraph(self, **_kwargs):
-        protocol = _kwargs.get('protocol')
-
-        # This condition can be removed after implementing support for the protocol parameter
-        if protocol is not None:
-            LOG.warn("protocol parameter is ignored. Support not implemented.")
-            protocol = "0000"
-
-        # So far this can be only be either rx or tx
-        port_id = _kwargs.get('port_id', 'empty')
-        start_time = _kwargs.get('start', 'N')
-        end_time = _kwargs.get('end', 'N')
-        step = _kwargs.get('step', 'N')
+        # Graph config
+        start_time = _kwargs.get('start', '-86400')
+        end_time = _kwargs.get('end', 'now')
+        width = _kwargs.get('width', '785')
+        height = _kwargs.get('height', '120')
+        color = _kwargs.get('color', '0000FF')
 
         switch_id = _kwargs.get('switch_id', 'empty')
-        data_source_name = port_id + "_" + protocol
+        traffic_direction = _kwargs.get('direction', 'rx')  # So far this can be only be either rx or tx
+        protocol = _kwargs.get('protocol', '0000')  # This is not used now
+        data_source_name = _kwargs.get('data_source', '')
+        if len(data_source_name) == 0:
+            return Response(status=404)
 
-        # The file naming convention used in this project states: switchidPortid.rrd
-        output_file = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + port_id + ".png")))
-        rrd_input = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + port_id + ".rrd")))
+        # The file naming convention used in this project states: switchidtraffic_direction.rrd
+        output_file = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".png")))
+        rrd_input = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".rrd")))
+
+        LOG.debug("Graph output file:{}".format(output_file))
+        LOG.debug("RRD input file:{}".format(rrd_input))
+
         if path.isfile(rrd_input) is not True:
             return Response(status=404)
 
-        data_definition = "DEF:vname={0}:{4}:CF[:step={1}][:start={2}][:end={3}]".format(rrd_input, step, start_time,
-                                                                                         end_time, data_source_name)
-        data = rrdtool.graph(output_file, '--start', str(start_time), '--end', str(end_time), data_definition)
-
+        data_definition = "DEF:vname={0}:{1}:AVERAGE LINE1:vname#{2}:{3}".format(rrd_input, data_source_name, color,
+                                                                                 data_source_name)
+        data = rrdtool.graph(output_file, '--start', str(start_time), '--end', str(end_time),
+                             '-a', 'PNG',
+                             '--lower-limit', '0',
+                             '-w', str(width), '-h', str(height),
+                             '--x-grid', 'MINUTE:10:HOUR:1:MINUTE:120:0:%R',
+                             data_definition)
+        # TODO: manage output file and response
         return Response(content_type='application/json', body=data)
     '''
     Chiamata REST che lista i Database RRD presenti nella cartella corrente.
