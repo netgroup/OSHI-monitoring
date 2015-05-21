@@ -549,7 +549,7 @@ class StatsController(ControllerBase):
 
         return Response(content_type='application/json', body=body)
 
-    def get_rrdgraph(self, **_kwargs):
+    def get_rrdgraph(self, req, **_kwargs):
         # Graph config
         start_time = _kwargs.get('start', '-86400')
         end_time = _kwargs.get('end', 'now')
@@ -560,7 +560,6 @@ class StatsController(ControllerBase):
         traffic_direction = _kwargs.get('direction', 'rx')  # So far this can be only be either rx or tx
         protocol = _kwargs.get('protocol', '0000')  # This is not used now
         data_source_name = _kwargs.get('data_source', '')
-
         LOG.debug("start_time:{0}".format(start_time))
         LOG.debug("end_time:{0}".format(end_time))
         LOG.debug("width:{0}".format(width))
@@ -571,9 +570,14 @@ class StatsController(ControllerBase):
         LOG.debug("protocol:{0}".format(protocol))
         LOG.debug("data_source_name:{0}".format(data_source_name))
 
+        kwar = ""
+
+        for a in kwargs:
+            kwar += a + ":" + kwargs[a] + "\n"
+
         # check for validity
         if len(switch_id) == 0:
-            return Response(status=404, body="switch id empty")
+            return Response(status=404, body="switch id empty. kwargs: {}".format(kwar))
 
         if len(data_source_name) == 0:
             return Response(status=404, body="data_source_name id empty")
