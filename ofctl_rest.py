@@ -6,6 +6,7 @@ import sys
 
 import os
 from os import path
+import time
 
 from webob import Response
 
@@ -115,6 +116,9 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # fetch data of requested database "filename", between "start" and "end" time expressed in unix time.
 # GET stats/rrdview/{filename}/{start}/{end}
+#
+# Get an rrd graph
+# GET stats/rrdgraph
 
 
 class StatsController(ControllerBase):
@@ -552,34 +556,48 @@ class StatsController(ControllerBase):
         width = _kwargs.get('width', '785')
         height = _kwargs.get('height', '120')
         color = _kwargs.get('color', '0000FF')
-
-        switch_id = _kwargs.get('switch_id', 'empty')
+        switch_id = _kwargs.get('switch_id', '')
         traffic_direction = _kwargs.get('direction', 'rx')  # So far this can be only be either rx or tx
         protocol = _kwargs.get('protocol', '0000')  # This is not used now
         data_source_name = _kwargs.get('data_source', '')
+
+        LOG.debug("start_time:{0}".format(start_time))
+        LOG.debug("end_time:{0}".format(end_time))
+        LOG.debug("width:{0}".format(width))
+        LOG.debug("height:{0}".format(height))
+        LOG.debug("color:{0}".format(color))
+        LOG.debug("switch_id:{0}".format(switch_id))
+        LOG.debug("traffic_direction:{0}".format(traffic_direction))
+        LOG.debug("protocol:{0}".format(protocol))
+        LOG.debug("data_source_name:{0}".format(data_source_name))
+
+        # check for validity
+        if len(switch_id) == 0:
+            return Response(status=404)
+
         if len(data_source_name) == 0:
             return Response(status=404)
 
         # The file naming convention used in this project states: switchidtraffic_direction.rrd
-        output_file = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".png")))
         rrd_input = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".rrd")))
-
-        LOG.debug("Graph output file:{}".format(output_file))
         LOG.debug("RRD input file:{}".format(rrd_input))
-
         if path.isfile(rrd_input) is not True:
             return Response(status=404)
 
+        output_file = '/tmp/rrd_graph_{0}.png'.format(int(time.time() * 1000))
+        LOG.debug("Graph output file:{}".format(output_file))
+
         data_definition = "DEF:vname={0}:{1}:AVERAGE LINE1:vname#{2}:{3}".format(rrd_input, data_source_name, color,
                                                                                  data_source_name)
+        LOG.debug("data_definition:{}".format(data_definition))
         data = rrdtool.graph(output_file, '--start', str(start_time), '--end', str(end_time),
                              '-a', 'PNG',
                              '--lower-limit', '0',
                              '-w', str(width), '-h', str(height),
                              '--x-grid', 'MINUTE:10:HOUR:1:MINUTE:120:0:%R',
                              data_definition)
-        # TODO: manage output file and response
-        return Response(content_type='application/json', body=data)
+        return Response(content_type='image/png', body=data)
+
     '''
     Chiamata REST che lista i Database RRD presenti nella cartella corrente.
     L'output si trova nel 'body' della risposta ed e' una lista semplice di file cn estensione '.rrd'.
@@ -710,6 +728,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/listdb'
         mapper.connect('stats', uri,
                        controller=StatsController, action='listdb',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/rrdgraph'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_rrdgraph',
                        conditions=dict(method=['GET']))
 
     @set_ev_cls([ofp_event.EventOFPStatsReply,
