@@ -549,35 +549,26 @@ class StatsController(ControllerBase):
 
         return Response(content_type='application/json', body=body)
 
-    def get_rrdgraph(self, req, **_kwargs):
+    def get_rrdgraph(self, dpid, data_source_name, protocol, traffic_direction, start_time, end_time, **_kwargs):
         # Graph config
-        start_time = _kwargs.get('start', '-86400')
-        end_time = _kwargs.get('end', 'now')
         width = _kwargs.get('width', '785')
         height = _kwargs.get('height', '120')
         color = _kwargs.get('color', '0000FF')
-        switch_id = _kwargs.get('switch_id', '')
-        traffic_direction = _kwargs.get('direction', 'rx')  # So far this can be only be either rx or tx
-        protocol = _kwargs.get('protocol', '0000')  # This is not used now
-        data_source_name = _kwargs.get('data_source', '')
+        switch_id = dpid
+
         LOG.debug("start_time:{0}".format(start_time))
         LOG.debug("end_time:{0}".format(end_time))
         LOG.debug("width:{0}".format(width))
         LOG.debug("height:{0}".format(height))
         LOG.debug("color:{0}".format(color))
         LOG.debug("switch_id:{0}".format(switch_id))
-        LOG.debug("traffic_direction:{0}".format(traffic_direction))
-        LOG.debug("protocol:{0}".format(protocol))
+        LOG.debug("traffic_direction:{0}".format(traffic_direction))  # So far this can be only be either rx or tx
+        LOG.debug("protocol:{0}".format(protocol))  # This is not used now
         LOG.debug("data_source_name:{0}".format(data_source_name))
-
-        kwar = ""
-
-        for a in _kwargs:
-            kwar += a + ":" + _kwargs[a] + "\n"
 
         # check for validity
         if len(switch_id) == 0:
-            return Response(status=404, body="switch id empty. kwargs: {}".format(kwar))
+            return Response(status=404, body="switch id empty")
 
         if len(data_source_name) == 0:
             return Response(status=404, body="data_source_name empty")
@@ -734,7 +725,7 @@ class RestStatsApi(app_manager.RyuApp):
                        controller=StatsController, action='listdb',
                        conditions=dict(method=['GET']))
 
-        uri = path + '/rrdgraph'
+        uri = path + '/rrdgraph/{dpid}/{data_source_name}/{protocol}/{traffic_direction}/{start_time}/{end_time}'
         mapper.connect('stats', uri,
                        controller=StatsController, action='get_rrdgraph',
                        conditions=dict(method=['GET']))
