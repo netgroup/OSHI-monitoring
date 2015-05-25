@@ -587,7 +587,7 @@ class StatsController(ControllerBase):
             return Response(status=400, body="traffic_direction empty")
 
         # The file naming convention used in this project states: switchidtraffic_direction.rrd
-        rrd_input = os.getcwd() + '/' + os.path.dirname(switch_id + traffic_direction + ".rrd")
+        rrd_input = os.getcwd() + '/' + switch_id + traffic_direction + ".rrd"
         LOG.debug("RRD input file:{0}. switch_id:{1}, traffic_direction:{2}".format(rrd_input,
                                                                                     switch_id, traffic_direction))
         if path.isfile(rrd_input) is not True:
