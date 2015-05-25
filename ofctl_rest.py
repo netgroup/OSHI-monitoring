@@ -549,8 +549,19 @@ class StatsController(ControllerBase):
 
         return Response(content_type='application/json', body=body)
 
-    def get_rrdgraph(self, dpid, data_source_name, protocol, traffic_direction, start_time, end_time, **_kwargs):
-        switch_id = dpid
+    def get_rrdgraph(self, req, **_kwargs):
+        try:
+            rrdgraph_req = eval(req.body)
+        except SyntaxError:
+            LOG.debug('invalid syntax %s', req.body)
+            return Response(status=400, body='invalid syntax {0}'.format(req.body))
+
+        switch_id = rrdgraph_req.get('dpid')
+        data_source_name = rrdgraph_req.get('data_source_name')
+        protocol = rrdgraph_req.get('protocol')
+        traffic_direction = rrdgraph_req.get('traffic_direction')
+        start_time = rrdgraph_req.get('start_time')
+        end_time = rrdgraph_req.get('end_time')
 
         LOG.debug("switch_id:{0}".format(switch_id))
         LOG.debug("data_source_name:{0}".format(data_source_name))
