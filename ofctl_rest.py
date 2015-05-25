@@ -590,7 +590,7 @@ class StatsController(ControllerBase):
         rrd_input = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".rrd")))
         LOG.debug("RRD input file:{}".format(rrd_input))
         if path.isfile(rrd_input) is not True:
-            return Response(status=404, body="rrd_input not found")
+            return Response(status=404, body="rrd_input not found: {0}".format(rrd_input))
 
         output_file = '/tmp/rrd_graph_{0}.png'.format(int(time.time() * 1000))
         LOG.debug("Graph output file:{}".format(output_file))
