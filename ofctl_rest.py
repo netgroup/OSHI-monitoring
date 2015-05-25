@@ -23,7 +23,7 @@ from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
 from ryu.app.wsgi import ControllerBase, WSGIApplication
 
-
+logging.basicConfig(filename='tpin.log', filemode='w', level=logging.DEBUG)
 LOG = logging.getLogger('ryu.app.ofctl_rest')
 
 # REST API
