@@ -550,34 +550,48 @@ class StatsController(ControllerBase):
         return Response(content_type='application/json', body=body)
 
     def get_rrdgraph(self, dpid, data_source_name, protocol, traffic_direction, start_time, end_time, **_kwargs):
-        # Graph config
-        width = _kwargs.get('width', '785')
-        height = _kwargs.get('height', '120')
-        color = _kwargs.get('color', '0000FF')
         switch_id = dpid
 
+        LOG.debug("switch_id:{0}".format(switch_id))
+        LOG.debug("data_source_name:{0}".format(data_source_name))
+        LOG.debug("protocol:{0}".format(protocol))  # This is not used now
+        LOG.debug("traffic_direction:{0}".format(traffic_direction))  # So far this can be only be either rx or tx
         LOG.debug("start_time:{0}".format(start_time))
         LOG.debug("end_time:{0}".format(end_time))
+
+        # Graph config
+        width = '785'
+        height = '120'
+        color = '0000FF'
+
         LOG.debug("width:{0}".format(width))
         LOG.debug("height:{0}".format(height))
         LOG.debug("color:{0}".format(color))
-        LOG.debug("switch_id:{0}".format(switch_id))
-        LOG.debug("traffic_direction:{0}".format(traffic_direction))  # So far this can be only be either rx or tx
-        LOG.debug("protocol:{0}".format(protocol))  # This is not used now
-        LOG.debug("data_source_name:{0}".format(data_source_name))
 
         # check for validity
         if len(switch_id) == 0:
-            return Response(status=404, body="switch id empty")
+            return Response(status=400, body="switch id empty")
 
         if len(data_source_name) == 0:
-            return Response(status=404, body="data_source_name empty")
+            return Response(status=400, body="data_source_name empty")
+
+        if len(protocol) == 0:
+            return Response(status=400, body="protocol empty")
+
+        if len(traffic_direction) == 0:
+            return Response(status=400, body="traffic_direction empty")
+
+        if len(start_time) == 0:
+            return Response(status=400, body="start_time empty")
+
+        if len(end_time) == 0:
+            return Response(status=400, body="end_time empty")
 
         # The file naming convention used in this project states: switchidtraffic_direction.rrd
         rrd_input = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".rrd")))
         LOG.debug("RRD input file:{}".format(rrd_input))
         if path.isfile(rrd_input) is not True:
-            return Response(status=404, body="rrd_input empty")
+            return Response(status=404, body="rrd_input not found")
 
         output_file = '/tmp/rrd_graph_{0}.png'.format(int(time.time() * 1000))
         LOG.debug("Graph output file:{}".format(output_file))
