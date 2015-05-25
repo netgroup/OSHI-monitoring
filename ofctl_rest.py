@@ -598,15 +598,15 @@ class StatsController(ControllerBase):
         output_file = '/tmp/rrd_graph_{0}.png'.format(int(time.time() * 1000))
         LOG.debug("Graph output file:{}".format(output_file))
 
-        data_definition = "DEF:vname={0}:{1}:AVERAGE LINE1:vname#{2}:{3}".format(rrd_input, data_source_name, color,
-                                                                                 data_source_name)
+        data_definition = "DEF:vname={0}:{1}:AVERAGE".format(rrd_input, data_source_name)
+        line_definition = "LINE1:vname#{2}:{3}".format(color, data_source_name)
         LOG.debug("data_definition:{}".format(data_definition))
         data = rrdtool.graph(output_file, '--start', str(start_time), '--end', str(end_time),
                              '-a', 'PNG',
                              '--lower-limit', '0',
                              '-w', str(width), '-h', str(height),
                              '--x-grid', 'MINUTE:10:HOUR:1:MINUTE:120:0:%R',
-                             data_definition)
+                             data_definition, line_definition)
         return Response(content_type='image/png', body=data)
 
     '''
