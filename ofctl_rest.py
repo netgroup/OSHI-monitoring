@@ -607,7 +607,7 @@ class StatsController(ControllerBase):
                              '-w', str(width), '-h', str(height),
                              '--x-grid', 'MINUTE:10:HOUR:1:MINUTE:120:0:%R',
                              data_definition, line_definition)
-        return Response(content_type='image/png', body=data)
+        return Response(content_type='text/plain', body=data)
 
     '''
     Chiamata REST che lista i Database RRD presenti nella cartella corrente.
