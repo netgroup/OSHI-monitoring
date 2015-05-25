@@ -550,18 +550,12 @@ class StatsController(ControllerBase):
         return Response(content_type='application/json', body=body)
 
     def get_rrdgraph(self, req, **_kwargs):
-        try:
-            rrdgraph_req = eval(req.body)
-        except SyntaxError:
-            LOG.debug('invalid syntax %s', req.body)
-            return Response(status=400, body='invalid syntax {0}'.format(req.body))
-
-        switch_id = rrdgraph_req.get('dpid')
-        data_source_name = rrdgraph_req.get('data_source_name')
-        protocol = rrdgraph_req.get('protocol')
-        traffic_direction = rrdgraph_req.get('traffic_direction')
-        start_time = rrdgraph_req.get('start_time')
-        end_time = rrdgraph_req.get('end_time')
+        switch_id = _kwargs.get('dpid', '')
+        data_source_name = _kwargs.get('data_source_name', '')
+        protocol = _kwargs.get('protocol', '')
+        traffic_direction = _kwargs.get('traffic_direction', '')
+        start_time = _kwargs.get('start_time', 'N')
+        end_time = _kwargs.get('end_time', 'N')
 
         LOG.debug("switch_id:{0}".format(switch_id))
         LOG.debug("data_source_name:{0}".format(data_source_name))
@@ -591,12 +585,6 @@ class StatsController(ControllerBase):
 
         if len(traffic_direction) == 0:
             return Response(status=400, body="traffic_direction empty")
-
-        if len(start_time) == 0:
-            return Response(status=400, body="start_time empty")
-
-        if len(end_time) == 0:
-            return Response(status=400, body="end_time empty")
 
         # The file naming convention used in this project states: switchidtraffic_direction.rrd
         rrd_input = os.path.realpath(os.path.join(os.getcwd(), os.path.dirname(switch_id + traffic_direction + ".rrd")))
