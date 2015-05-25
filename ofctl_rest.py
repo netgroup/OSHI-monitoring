@@ -588,7 +588,7 @@ class StatsController(ControllerBase):
 
         # The file naming convention used in this project states: switchidtraffic_direction.rrd
         # this may be done in a more pythonic way using os.path.join
-        rrd_input = os.getcwd() + '/' + switch_id + traffic_direction + ".rrd"
+        rrd_input = switch_id + traffic_direction + ".rrd"
         LOG.debug("RRD input file:{0}. switch_id:{1}, traffic_direction:{2}".format(rrd_input,
                                                                                     switch_id, traffic_direction))
         if path.isfile(rrd_input) is not True:
