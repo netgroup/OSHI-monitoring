@@ -53,10 +53,10 @@ class RRDManager(object):
                        str(self.getActualTime()),
                        self.data_sources,
                        'RRA:AVERAGE:' + self.XFF1 + ':' + self.STEP1 + ':' + self.ROWS1,  # i dati raccolti ogni 5 minuti per 2 ore
-                       'RRA:AVERAGE:' + self.XFF2 + ':' + self.STEP2 + ':' + self.ROWS2,  #i dati raccolti ogni 30 minuti per 5 ore
+                       'RRA:AVERAGE:' + self.XFF2 + ':' + self.STEP2 + ':' + self.ROWS2,  # i dati raccolti ogni 30 minuti per 5 ore
                        'RRA:AVERAGE:' + self.XFF3 + ':' + self.STEP3 + ':' + self.ROWS3,  # i dati raccolti ogni ora per un giorno
                        'RRA:AVERAGE:' + self.XFF4 + ':' + self.STEP4 + ':' + self.ROWS4,  # i dati raccolti ogni giorno per una settimana
-                       'RRA:AVERAGE:' + self.XFF5 + ':' + self.STEP5 + ':' + self.ROWS5)  #i dati raccolti ogni settimana per 4 settimane
+                       'RRA:AVERAGE:' + self.XFF5 + ':' + self.STEP5 + ':' + self.ROWS5)  # i dati raccolti ogni settimana per 4 settimane
         print
         self.raw_data_sources
 
