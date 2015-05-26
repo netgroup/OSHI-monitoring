@@ -7,8 +7,6 @@ do
 		  echo "Setting up environment..."
 		  apt-get install rrdtool librrds-perl librrd-dev
 		  pip install rrdtool
-		  cd /home/user/workspace
-		  git clone https://github.com/ferrarimarco/tpin-2015-project.git
             ;;
         --install) 
 		  cd /home/user/workspace/tpin-2015-project

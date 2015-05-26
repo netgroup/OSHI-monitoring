@@ -118,7 +118,7 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 # GET stats/rrdview/{filename}/{start}/{end}
 #
 # Get an rrd graph
-# GET stats/rrdgraph
+# GET stats/rrdgraph/{dpid}/{data_source_name}/{protocol}/{traffic_direction}/{start_time}/{end_time}
 
 
 class StatsController(ControllerBase):
