@@ -6,6 +6,7 @@ import sys
 
 import os
 from os import path
+import time
 
 from webob import Response
 
@@ -22,7 +23,7 @@ from ryu.lib import ofctl_v1_2
 from ryu.lib import ofctl_v1_3
 from ryu.app.wsgi import ControllerBase, WSGIApplication
 
-
+logging.basicConfig(filename='tpin.log', filemode='w', level=logging.DEBUG)
 LOG = logging.getLogger('ryu.app.ofctl_rest')
 
 # REST API
@@ -115,6 +116,9 @@ LOG = logging.getLogger('ryu.app.ofctl_rest')
 #
 # fetch data of requested database "filename", between "start" and "end" time expressed in unix time.
 # GET stats/rrdview/{filename}/{start}/{end}
+#
+# Get an rrd graph
+# GET stats/rrdgraph
 
 
 class StatsController(ControllerBase):
@@ -199,7 +203,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_features(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -217,7 +221,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_config(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -235,7 +239,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             meters = ofctl_v1_3.get_meter_stats(dp, self.waiters)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -398,7 +402,7 @@ class StatsController(ControllerBase):
         if dp.ofproto.OFP_VERSION == ofproto_v1_3.OFP_VERSION:
             ofctl_v1_3.mod_meter_entry(dp, flow, cmd)
         elif dp.ofproto.OFP_VERSION == ofproto_v1_0.OFP_VERSION or \
-                dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
+                        dp.ofproto.OFP_VERSION == ofproto_v1_2.OFP_VERSION:
             LOG.debug('Request not supported in this OF protocol version')
             return Response(status=501)
         else:
@@ -510,36 +514,33 @@ class StatsController(ControllerBase):
     ''' 
     Chiamata REST che recupera i dati da un Database RR.
     L'output si trova nel 'body' della risposta. Va interpretato come segue:
-        - La prima riga rappresenta il vettore contenente i parametri di
-
-            (start time, end time, step)
-        
+        - La prima riga rappresenta il vettore contenente i parametri di (start time, end time, step)
         - La seconda riga contiene i nomi dei datasource all'interno del Database
-        - La terza riga e' il vettore contenente le associazioni
-
-            (valore, tempo)
+        - La terza riga e' il vettore contenente le associazioni (valore, tempo)
 
     Tali valori sono calcolati eseguendo le medie nei vari intervalli di tempo e sulla base dei campioni raccolti.
 
     I parametri da passare alla chiamata REST sono i seguenti tre:
         1) 'filename' : il nome del file in cui e' contenuto il Database
-        2) 'start'    : il tempo di inizio, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX), dell'osservazione
-        3) 'end'      : il tempo di fine, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX), dell'osservazione
+        2) 'start'    : il tempo di inizio, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX),
+            dell'osservazione
+        3) 'end'      : il tempo di fine, espresso in secondi dal 1 Gennaio 1970 (come da standard UNIX),
+            dell'osservazione
 
-    Qualora uno dei tempi non fosse specificato, allora la chiamata prenderebbe in automatico il valore 'N' che sta per 'NOW'
-    (ovvero il tempo corrente).
+    Qualora uno dei tempi non fosse specificato, allora la chiamata prenderebbe in automatico il valore 'N' che sta per
+    'NOW' (ovvero il tempo corrente).
     '''
     def rrdviewer(self, req, **_kwargs):
         filename = _kwargs.get('filename', 'empty')
         start_time = _kwargs.get('start', 'N')
         end_time = _kwargs.get('end', 'N')
-        body = '';
+        body = ''
 
         try:
             data = rrdtool.fetch(str(filename), 'AVERAGE', '--start', str(start_time), '--end', str(end_time))
 
             for temp in data:
-                body += str(temp) + '\n';
+                body += str(temp) + '\n'
         except Exception as e:
             body = str(e)
             pass
@@ -547,6 +548,66 @@ class StatsController(ControllerBase):
         body += '\n'
 
         return Response(content_type='application/json', body=body)
+
+    def get_rrdgraph(self, req, **_kwargs):
+        switch_id = _kwargs.get('dpid', '')
+        data_source_name = _kwargs.get('data_source_name', '')
+        protocol = _kwargs.get('protocol', '')
+        traffic_direction = _kwargs.get('traffic_direction', '')
+        start_time = _kwargs.get('start_time', 'N')
+        end_time = _kwargs.get('end_time', 'N')
+
+        LOG.debug("switch_id:{0}".format(switch_id))
+        LOG.debug("data_source_name:{0}".format(data_source_name))
+        LOG.debug("protocol:{0}".format(protocol))  # This is not used now
+        LOG.debug("traffic_direction:{0}".format(traffic_direction))  # So far this can be only be either rx or tx
+        LOG.debug("start_time:{0}".format(start_time))
+        LOG.debug("end_time:{0}".format(end_time))
+
+        # Graph config
+        width = '785'
+        height = '120'
+        color = '0000FF'
+
+        LOG.debug("width:{0}".format(width))
+        LOG.debug("height:{0}".format(height))
+        LOG.debug("color:{0}".format(color))
+
+        # check for validity
+        if len(switch_id) == 0:
+            return Response(status=400, body="switch id empty")
+
+        if len(data_source_name) == 0:
+            return Response(status=400, body="data_source_name empty")
+
+        if len(protocol) == 0:
+            return Response(status=400, body="protocol empty")
+
+        if len(traffic_direction) == 0:
+            return Response(status=400, body="traffic_direction empty")
+
+        # The file naming convention used in this project states: switchidtraffic_direction.rrd
+        # this may be done in a more pythonic way using os.path.join
+        rrd_input = switch_id + traffic_direction + ".rrd"
+        LOG.debug("RRD input file:{0}. switch_id:{1}, traffic_direction:{2}".format(rrd_input,
+                                                                                    switch_id, traffic_direction))
+        if path.isfile(rrd_input) is not True:
+            return Response(status=404, body="rrd_input not found: {0}. switch_id:{1}, traffic_direction:{2}"
+                            .format(rrd_input, switch_id, traffic_direction))
+
+        output_file = '/tmp/rrd_graph_{0}.png'.format(int(time.time() * 1000))
+        LOG.debug("Graph output file:{}".format(output_file))
+
+        data_definition = "DEF:vname={0}:{1}:AVERAGE".format(rrd_input, data_source_name)
+        line_definition = "LINE1:vname#{0}:{1}".format(color, data_source_name)
+        LOG.debug("data_definition:{}".format(data_definition))
+        data = rrdtool.graph(output_file, '--start', str(start_time), '--end', str(end_time),
+                             '-a', 'PNG',
+                             '--lower-limit', '0',
+                             '-w', str(width), '-h', str(height),
+                             '--x-grid', 'MINUTE:10:HOUR:1:MINUTE:120:0:%R',
+                             data_definition, line_definition)
+        return Response(content_type='image/png', body=open(output_file, "rb").read())
 
     '''
     Chiamata REST che lista i Database RRD presenti nella cartella corrente.
@@ -562,6 +623,7 @@ class StatsController(ControllerBase):
                 body += str(dbentry) + "\n"
 
         return Response(content_type='application/json', body=body)
+
 
 class RestStatsApi(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_0.OFP_VERSION,
@@ -677,6 +739,11 @@ class RestStatsApi(app_manager.RyuApp):
         uri = path + '/listdb'
         mapper.connect('stats', uri,
                        controller=StatsController, action='listdb',
+                       conditions=dict(method=['GET']))
+
+        uri = path + '/rrdgraph/{dpid}/{data_source_name}/{protocol}/{traffic_direction}/{start_time}/{end_time}'
+        mapper.connect('stats', uri,
+                       controller=StatsController, action='get_rrdgraph',
                        conditions=dict(method=['GET']))
 
     @set_ev_cls([ofp_event.EventOFPStatsReply,
