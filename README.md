@@ -46,4 +46,3 @@ You can call each REST endpoint implemented in ofctl_rest.py. The server runs on
 curl http://10.0.4.1:8080/stats/switches
 ```
 *Note that ryu-manager must be running on the machine you want to query. 10.0.4.1 (ctr8) in this case.*
-
