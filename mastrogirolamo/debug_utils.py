@@ -2,7 +2,7 @@ import time
 import sys
 
 MYPRINT_DEBUG = 1
-MYPRINT_INFO  = 2
+MYPRINT_INFO = 2
 MYPRINT_ALERT = 3 
 
 class bcolors:
@@ -14,6 +14,7 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
 
 def myPrint(style,who,what,new_line=True):
         when = time.strftime("[%H:%M:%S]", time.gmtime())

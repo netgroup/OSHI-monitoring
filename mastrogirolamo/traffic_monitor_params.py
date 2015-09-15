@@ -1,5 +1,5 @@
-REQUEST_INTERVAL = 1    #Stats request time interval. MUST BE 1
-DELTA_WINDOW = 20       #RATE WINDOWS
+REQUEST_INTERVAL = 1  # Stats request time interval. MUST BE 1
+DELTA_WINDOW = 20  # RATE WINDOWS
 
 LLDP_NOISE_BYTE_S = 19
 LLDP_NOISE_PACK_S = 0.365
