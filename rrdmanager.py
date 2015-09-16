@@ -1,6 +1,23 @@
 import rrdtool
 import math
 import time
+import logging
+
+log = logging.getLogger('oshi.monitoring.rrdmanager')
+log.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler('log/rrdmanager.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+log.addHandler(ch)
+log.addHandler(fh)
 
 
 class RRDManager(object):
@@ -44,7 +61,11 @@ class RRDManager(object):
                 for eth_type in self.eth_types:
                     temp = str(self.constructDataSource(dev_id, port_n, eth_type))
                     self.raw_data_sources.append(temp)
-                    self.data_sources.append('DS:' + temp + ':GAUGE:600:U:U')
+                    data_source = 'DS:' + temp + ':GAUGE:600:U:U'
+                    log.debug("Build RRD data source from %s . Result: %s", temp, data_source)
+                    self.data_sources.append(data_source)
+
+        log.debug("File name: %s, Data sources: %s, Raw data sources: %s", self.filename, self.data_sources, self.raw_data_sources)
         # create rrd w/ default step = 300 sec
         rrdtool.create(self.filename,
                        '--step',
@@ -57,8 +78,6 @@ class RRDManager(object):
                        'RRA:AVERAGE:' + self.XFF3 + ':' + self.STEP3 + ':' + self.ROWS3,  # i dati raccolti ogni ora per un giorno
                        'RRA:AVERAGE:' + self.XFF4 + ':' + self.STEP4 + ':' + self.ROWS4,  # i dati raccolti ogni giorno per una settimana
                        'RRA:AVERAGE:' + self.XFF5 + ':' + self.STEP5 + ':' + self.ROWS5)  # i dati raccolti ogni settimana per 4 settimane
-        print
-        self.raw_data_sources
 
     # insert values w/ timestamp NOW for a set of given DS
     def update(self, data_sources, values):
