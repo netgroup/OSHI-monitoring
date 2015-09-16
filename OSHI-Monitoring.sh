@@ -16,7 +16,7 @@ do
 		 cd /home/user/workspace/Dreamer-Mininet-Extensions
 		 ./mininet_deployer.py --topology /media/sf_Shared/topologies/simple_topology.json
 		    ;;
-		 --run-ryu)
+        --run-ryu)
 		  cd /media/sf_Shared/workspace/pycharm/OSHI-monitoring
 		  ryu-manager --observe-links traffic_monitor.py ofctl_rest.py rrdmanager.py
             ;;
