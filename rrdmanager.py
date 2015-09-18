@@ -2,6 +2,8 @@ import rrdtool
 import math
 import time
 import logging
+from os.path import join
+import config
 
 log = logging.getLogger('oshi.monitoring.rrdmanager')
 log.setLevel(logging.DEBUG)
@@ -37,16 +39,16 @@ class RRDManager(object):
     ROWS4 = "7"
     ROWS5 = "4"
 
-    def getActualTime(self):
+    @staticmethod
+    def get_current_time():
         return int(math.floor(time.time()))
 
-    # se eth_type non corrisponde a nulla (IP, MPLS, ...) inserire 0000
     def constructDataSource(self, dev_id, port_n, eth_type):
         return str(str(port_n) + '_' + str(eth_type))
 
     def __init__(self, filename, device, eth_types):
         # define rrd filename
-        self.filename = filename
+        self.filename = join(config.RRD_STORE_PATH, filename)
         self.eth_types = eth_types
 
         # import port numbers for each device id
@@ -69,9 +71,9 @@ class RRDManager(object):
         # create rrd w/ default step = 300 sec
         rrdtool.create(self.filename,
                        '--step',
-                       '300',
+                       config.RRD_STEP,
                        '--start',
-                       str(self.getActualTime()),
+                       str(RRDManager.get_current_time()),
                        self.data_sources,
                        'RRA:AVERAGE:' + self.XFF1 + ':' + self.STEP1 + ':' + self.ROWS1,  # i dati raccolti ogni 5 minuti per 2 ore
                        'RRA:AVERAGE:' + self.XFF2 + ':' + self.STEP2 + ':' + self.ROWS2,  # i dati raccolti ogni 30 minuti per 5 ore
