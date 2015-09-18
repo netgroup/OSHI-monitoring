@@ -1,3 +1,4 @@
+import os
 import rrdtool
 import math
 import time
@@ -8,7 +9,7 @@ import config
 log = logging.getLogger('oshi.monitoring.rrdmanager')
 log.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
-fh = logging.FileHandler('log/rrdmanager.log')
+fh = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "rrdmanager.log"))
 fh.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
