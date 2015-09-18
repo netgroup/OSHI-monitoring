@@ -28,10 +28,6 @@ class SimpleMonitor(app_manager.RyuApp):
     def _request_stats(self, datapath):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
-        cookie = cookie_mask = 0
-        req = parser.OFPFlowStatsRequest(datapath, 0,
-                                         ofproto.OFPTT_ALL,
-                                         ofproto.OFPP_ANY, ofproto.OFPG_ANY, cookie, cookie_mask)
         req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
         datapath.send_msg(req)
 
