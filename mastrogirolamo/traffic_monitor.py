@@ -38,7 +38,7 @@ class SimpleMonitor(app_manager.RyuApp):
     def _monitor(self):
         log.info("Started monitor thread.")
         while True:
-            log.info("Send PORT stats requests")
+            log.debug("Send PORT stats requests")
             for ss in self.stats.values():
                 self._request_stats(ss.dp)
             hub.sleep(REQUEST_INTERVAL)
@@ -102,8 +102,9 @@ class SimpleMonitor(app_manager.RyuApp):
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
         ss = self.stats[ev.msg.datapath.id]
-        f_b = open('./port_stats/bytes_stats/dp_' + str(ev.msg.datapath.id), 'w+')
-        f_p = open('./port_stats/packets_stats/dp_' + str(ev.msg.datapath.id), 'w+')
+
+        f_b = open(os.path.join(config.PORT_BYTES_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
+        f_p = open(os.path.join(config.PORT_PACKETS_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
         for stat in sorted(body, key=attrgetter('port_no')):
             if int(stat.port_no) > 1000:
                 continue
