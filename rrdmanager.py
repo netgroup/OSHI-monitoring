@@ -44,7 +44,8 @@ class RRDManager(object):
     def get_current_time():
         return int(math.floor(time.time()))
 
-    def _build_rrd_data_source_definition(self, port_n, eth_type):
+    @staticmethod
+    def _build_rrd_data_source_definition(port_n, eth_type):
         return str(str(port_n) + '_' + str(eth_type))
 
     def __init__(self, filename, device, eth_types):
@@ -62,7 +63,7 @@ class RRDManager(object):
         for dev_id in sorted(self.device):
             for port_n in self.device[dev_id]:
                 for eth_type in self.eth_types:
-                    temp = str(self._build_rrd_data_source_definition(port_n, eth_type))
+                    temp = str(RRDManager._build_rrd_data_source_definition(port_n, eth_type))
                     self.raw_data_sources.append(temp)
                     data_source = 'DS:' + temp + ':GAUGE:600:U:U'
                     log.debug("Build RRD data source from %s . Result: %s", temp, data_source)
