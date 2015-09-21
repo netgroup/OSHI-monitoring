@@ -45,32 +45,30 @@ class RRDManager(object):
         return int(math.floor(time.time()))
 
     @staticmethod
-    def _build_rrd_data_source_definition(port_n, eth_type):
-        return str(str(port_n) + '_' + str(eth_type))
+    def _build_rrd_data_source_definition(device_id, port_n):
+        return str(str(device_id) + '_' + str(port_n))
 
-    def __init__(self, filename, device, eth_types):
+    def __init__(self, filename, device):
         # define rrd filename
         self.filename = join(config.RRD_STORE_PATH, filename)
-        self.eth_types = eth_types
 
         # import port numbers for each device id
         self.device = device
 
-        # build ALL data sources DS:deviceID_portN_ETH_TYPE:COUNTER:600:U:U
+        # build ALL data sources deviceID_portN:GAUGE
         self.data_sources = []
         self.raw_data_sources = []
 
         for dev_id in sorted(self.device):
             for port_n in self.device[dev_id]:
-                for eth_type in self.eth_types:
-                    temp = str(RRDManager._build_rrd_data_source_definition(port_n, eth_type))
+                    temp = str(RRDManager._build_rrd_data_source_definition(dev_id, port_n))
                     self.raw_data_sources.append(temp)
                     data_source = 'DS:' + temp + ':GAUGE:600:U:U'
                     log.debug("Build RRD data source from %s . Result: %s", temp, data_source)
                     self.data_sources.append(data_source)
 
-        log.debug("File name: %s, Data sources: %s, Raw data sources: %s", self.filename, self.data_sources, self.raw_data_sources)
-        # create rrd w/ default step = 300 sec
+        log.debug("File name: %s, Data sources: %s, Raw data sources: %s",
+                  self.filename, self.data_sources, self.raw_data_sources)
         rrdtool.create(self.filename,
                        '--step',
                        config.RRD_STEP,
