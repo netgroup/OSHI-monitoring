@@ -102,9 +102,6 @@ class SimpleMonitor(app_manager.RyuApp):
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
         ss = self.stats[ev.msg.datapath.id]
-
-        f_b = open(os.path.join(config.PORT_BYTES_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
-        f_p = open(os.path.join(config.PORT_PACKETS_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
         for stat in sorted(body, key=attrgetter('port_no')):
             if int(stat.port_no) > 1000:
                 continue
@@ -113,5 +110,10 @@ class SimpleMonitor(app_manager.RyuApp):
             ss.setRxPackets(stat.port_no, stat.rx_packets)
             ss.setTxPackets(stat.port_no, stat.tx_packets)
         ss.updateSDNStats()
+        # save stats
+        f_b = open(os.path.join(config.PORT_BYTES_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
         f_b.write(ss.getBytesStats())
+        f_b.close()
+        f_p = open(os.path.join(config.PORT_PACKETS_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
         f_p.write(ss.getPacketsStats())
+        f_p.close()
