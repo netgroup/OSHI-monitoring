@@ -1,3 +1,4 @@
+import os
 import re
 from operator import attrgetter
 
@@ -6,9 +7,26 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 from ryu.base import app_manager
-from debug_utils import MYPRINT_INFO, MYPRINT_DEBUG, MYPRINT_ALERT, myPrint
+import config
 from switch_stats import SwitchStats
 from traffic_monitor_params import *
+import logging
+
+log = logging.getLogger('oshi.monitoring.traffic_monitor')
+log.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler(os.path.join(config.TRAFFIC_MONITOR_LOG_PATH, "traffic_monitor.log"))
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+log.addHandler(ch)
+log.addHandler(fh)
 
 
 class SimpleMonitor(app_manager.RyuApp):
@@ -18,9 +36,9 @@ class SimpleMonitor(app_manager.RyuApp):
         self.monitor_thread = hub.spawn(self._monitor)
 
     def _monitor(self):
-        myPrint(MYPRINT_INFO, "THREAD", "Started monitor thread.")
+        log.info("Started monitor thread.")
         while True:
-            myPrint(MYPRINT_INFO, "THREAD", "sending PORT stats requests", new_line=False)
+            log.info("Send PORT stats requests")
             for ss in self.stats.values():
                 self._request_stats(ss.dp)
             hub.sleep(REQUEST_INTERVAL)
@@ -37,7 +55,7 @@ class SimpleMonitor(app_manager.RyuApp):
         ofp_parser = datapath.ofproto_parser
         if ev.state == MAIN_DISPATCHER:
             if datapath.id not in self.stats:
-                myPrint(MYPRINT_INFO, "STATECHANGE", 'register datapath: %016x' % datapath.id)
+                log.info("register datapath: %s", datapath.id)
                 self.stats[datapath.id] = SwitchStats(datapath)
                 req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
                 datapath.send_msg(req)
@@ -50,7 +68,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 datapath.send_msg(req)
         elif ev.state == DEAD_DISPATCHER:
             if datapath.id in self.stats:
-                myPrint(MYPRINT_INFO, "STATECHANGE", 'unregister datapath: %016x' % datapath.id)
+                log.info("Unregister datapath: %s", datapath.id)
                 del self.stats[datapath.id]
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
@@ -61,11 +79,11 @@ class SimpleMonitor(app_manager.RyuApp):
                 continue
             ss.addPort(p.port_no)
             ss.setPortName(p.port_no, p.name)
-            myPrint(MYPRINT_INFO, "PORTDESC", '%016x add port: %d.%s' % (ev.msg.datapath.id, p.port_no, p.name))
+            log.info("%s add port: %s, %s", ev.msg.datapath.id, p.port_no, p.name)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
-        myPrint(MYPRINT_DEBUG, "FLOWSTATS", "FLOW stats received from %016x" % ev.msg.datapath.id)
+        log.debug("FLOW stats received from %s", ev.msg.datapath.id)
         ss = self.stats[ev.msg.datapath.id]
         body = ev.msg.body
         for flow_stat in body:
@@ -77,7 +95,7 @@ class SimpleMonitor(app_manager.RyuApp):
                     ss.setIPPartner(in_port, out_port)
                     ss.setIPPartner(out_port, in_port)
             except Exception as e:
-                myPrint(MYPRINT_ALERT, "FLOWSTATS", str(e))
+                log.error("Error while handling stat reply: %s", str(e))
                 continue
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
