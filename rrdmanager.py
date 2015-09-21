@@ -93,19 +93,3 @@ class RRDManager(object):
         template = ':'.join(data_sources)
         values = ':'.join(str(value) for value in values)
         rrdtool.update(self.filename, '-t', template, str(self.getActualTime()) + ':' + values)
-
-
-################
-# T E S T    #
-################
-'''
-device = {}
-device['PEO1'] = [1,2,3,4]
-device['PEO2'] = [1,2]
-device['PEO3'] = [1,4,5,6]
-device['PEO4'] = [2,3,5]
-
-rrdman = RRDManager('test.rrd', device, ["0800", "0806", "0000"])
-time.sleep(10)
-rrdman.update([rrdman.construct_rrd_data_source('PEO1', 1, "0800"), rrdman.construct_rrd_data_source('PEO2', 1, "0806"), rrdman.construct_rrd_data_source('PEO3', 1, "0000")],[13000,15005,13501])
-'''
