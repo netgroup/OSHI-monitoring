@@ -11,54 +11,6 @@ class SwitchStats:
     def get_datapath(self):
         return self.dp
 
-    def getBytesStats(self):
-        s = ' Name      | Port      |IP |    TOT_rx |    TOT_tx |     rx_rate |     tx_rate |'
-        s += '    SDN_rx |    SDN_tx | SDN_rx_rate | SDN_tx_rate | \n'
-        s += '-----------+-----------+---+-----------+-----------+-------------+-------------+'
-        s += '-----------+-----------+-------------+-------------+--\n'
-        for p in self.ports:
-            s += "%10s" % (self.getPortName(p)) + " |"
-            s += "%10d" % (p) + " |"
-            s += "%2d" % (self.getIPPartner(p)) + " |"
-            s += "%1s%3d.%02d %2s" % (self.__format_bytes(self.getRxBytes(p))) + " |"
-            s += "%1s%3d.%02d %2s" % (self.__format_bytes(self.getTxBytes(p))) + " |"
-            s += "%1s%3d.%02d %2s/s" % (self.__format_bytes(self.getRxBytesRate(p))) + " |"
-            s += "%1s%3d.%02d %2s/s" % (self.__format_bytes(self.getTxBytesRate(p))) + " |"
-            if not len(re.findall(r"vi+[0-9]", self.getPortName(p), flags=0)) == 1:
-                s += "%1s%3d.%02d %2s" % (self.__format_bytes(self.getSDNRxBytes(p))) + " |"
-                s += "%1s%3d.%02d %2s" % (self.__format_bytes(self.getSDNTxBytes(p))) + " |"
-                s += "%1s%3d.%02d %2s/s" % (self.__format_bytes(self.getSDNRxBytesRate(p))) + " |"
-                s += "%1s%3d.%02d %2s/s" % (self.__format_bytes(self.getSDNTxBytesRate(p))) + " |"
-            else:
-                s += "           |           |             |             |"
-            s += "\n"
-        s += "\n"
-        return s
-
-    def getPacketsStats(self):
-        s = ' Name      | Port      |IP |    TOT_rx |    TOT_tx |      rx_rate |      tx_rate |'
-        s += '    SDN_rx |    SDN_tx |  SDN_rx_rate |  SDN_tx_rate | \n'
-        s += '-----------+-----------+---+-----------+-----------+--------------+--------------+'
-        s += '-----------+-----------+--------------+--------------+--\n'
-        for p in self.ports:
-            s += "%10s" % (self.getPortName(p)) + " |"
-            s += "%10d" % (p) + " |"
-            s += "%2d" % (self.getIPPartner(p)) + " |"
-            s += "%10d" % (self.getRxPackets(p)) + " |"
-            s += "%10d" % (self.getTxPackets(p)) + " |"
-            s += "%1s%5d.%02d P/s" % (self.__format_packets(self.getRxPacketsRate(p))) + " |"
-            s += "%1s%5d.%02d P/s" % (self.__format_packets(self.getTxPacketsRate(p))) + " |"
-            if not len(re.findall(r"vi+[0-9]", self.getPortName(p), flags=0)) == 1:
-                s += "%10d" % (self.getSDNRxPackets(p)) + " |"
-                s += "%10d" % (self.getSDNTxPackets(p)) + " |"
-                s += "%1s%5d.%02d P/s" % (self.__format_packets(self.getSDNRxPacketsRate(p))) + " |"
-                s += "%1s%5d.%02d P/s" % (self.__format_packets(self.getSDNTxPacketsRate(p))) + " |"
-            else:
-                s += "           |           |              |              |"
-            s += "\n"
-        s += "\n"
-        return s
-
     def __format_packets(self, number):
         sign = ' ' if number >= 0 else '-'
         number = number if number >= 0 else number * -1
