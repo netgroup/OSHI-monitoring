@@ -10,8 +10,8 @@ class SwitchStats:
     def get_datapath(self):
         return self.dp
 
-    def setIPPartner(self, port_number, partnerport_number):
-        self.ports[port_number]['IP_partner'] = partnerport_number
+    def setIPPartner(self, port_number, partner_port_number):
+        self.ports[port_number]['IP_partner'] = partner_port_number
 
     def getIPPartner(self, port_number):
         if 'IP_partner' in self.ports[port_number]:
