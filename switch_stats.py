@@ -17,7 +17,7 @@ class SwitchStats:
         if 'IP_partner' in self.ports[port_number]:
             return self.ports[port_number]['IP_partner']
         else:
-            return -1;
+            return -1
 
     def getPort(self, port_number):
         return self.ports[port_number]
@@ -108,16 +108,6 @@ class SwitchStats:
 
     def getTxBytes(self, port_number):
         return self.ports[port_number]['tx_bytes']
-
-    def getSDNTxPacketsRate(self, port_number):
-        p = self.ports[port_number]
-        t2 = p['sdn_tx_packets_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_tx = p['sdn_tx_packets_buffer'][t1]
-        t2_tx = p['sdn_tx_packets_buffer'][t2]
-        if t2_tx == 0:
-            return 0
-        return float(t1_tx - t2_tx) / config.DELTA_WINDOW
 
     def setRxBytes(self, port_number, rx_bytes, lldp_noise=0):
         p = self.ports[port_number]

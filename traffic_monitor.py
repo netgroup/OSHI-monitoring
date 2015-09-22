@@ -110,9 +110,5 @@ class SimpleMonitor(app_manager.RyuApp):
             ss.setTxPackets(stat.port_no, stat.tx_packets)
         ss.updateSDNStats()
         # save stats
-        f_b = open(os.path.join(config.PORT_BYTES_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
-        f_b.write(ss.getBytesStats())
-        f_b.close()
-        f_p = open(os.path.join(config.PORT_PACKETS_STATS_PATH, str(ev.msg.datapath.id)), 'w+')
-        f_p.write(ss.getPacketsStats())
-        f_p.close()
+        # f_b.write(ss.getBytesStats())
+        # f_p.write(ss.getPacketsStats())
