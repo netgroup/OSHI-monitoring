@@ -76,7 +76,7 @@ class SimpleMonitor(app_manager.RyuApp):
         for p in sorted(ev.msg.body, key=attrgetter('port_no')):
             if int(p.port_no) > 1000:
                 continue
-            ss.addPort(p.port_no)
+            ss.add_port(p.port_no)
             ss.setPortName(p.port_no, p.name)
             log.info("%s add port: %s, %s", ev.msg.datapath.id, p.port_no, p.name)
 
@@ -91,8 +91,8 @@ class SimpleMonitor(app_manager.RyuApp):
                 out_port = flow_stat.instructions[0].actions[0].port
                 out_port_name = ss.getPortName(out_port)
                 if len(re.findall(r"vi+[0-9]", out_port_name, flags=0)) == 1:
-                    ss.setIPPartner(in_port, out_port)
-                    ss.setIPPartner(out_port, in_port)
+                    ss.set_ip_partner_port_number(in_port, out_port)
+                    ss.set_ip_partner_port_number(out_port, in_port)
             except Exception as e:
                 log.error("Error while handling stat reply: %s", str(e))
                 continue
@@ -104,7 +104,7 @@ class SimpleMonitor(app_manager.RyuApp):
         for stat in sorted(body, key=attrgetter('port_no')):
             if int(stat.port_no) > 1000:
                 continue
-            ss.setRxBytes(stat.port_no, stat.rx_bytes)
+            ss.set_rx_bytes(stat.port_no, stat.rx_bytes)
             ss.setTxBytes(stat.port_no, stat.tx_bytes)
             ss.setRxPackets(stat.port_no, stat.rx_packets)
             ss.setTxPackets(stat.port_no, stat.tx_packets)
