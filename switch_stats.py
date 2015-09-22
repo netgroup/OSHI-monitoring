@@ -10,29 +10,6 @@ class SwitchStats:
     def get_datapath(self):
         return self.dp
 
-    def __format_packets(self, number):
-        sign = ' ' if number >= 0 else '-'
-        number = number if number >= 0 else number * -1
-        return sign, number, int((number - int(number)) * 100)
-
-    def __format_bytes(self, number):
-        sign = ' ' if number >= 0 else '-'
-        number = number if number >= 0 else number * -1
-        if number < 1000 and number > -1000:
-            return (sign, number, int((number - int(number)) * 100), 'B')
-        elif number < 1000000 and number > -1000000:
-            return (sign, int(float(number) / 1000), int(float(number) / 10) - (int(float(number) / 1000) * 100), 'KB')
-        elif number < 1000000000 and number > -1000000000:
-            return (
-                sign, int(float(number) / 1000000), int(float(number) / 10000) - (int(float(number) / 1000000) * 100),
-                'MB')
-        elif number < 1000000000000 and number > -1000000000000:
-            return (sign, int(float(number) / 1000000000),
-                    int(float(number) / 10000000) - (int(float(number) / 1000000000) * 100), 'GB')
-        else:
-            return (sign, int(float(number) / 1000000000000),
-                    int(float(number) / 10000000000) - (int(float(number) / 1000000000000) * 100), 'TB')
-
     def setIPPartner(self, port_number, partnerport_number):
         self.ports[port_number]['IP_partner'] = partnerport_number
 
@@ -131,76 +108,6 @@ class SwitchStats:
 
     def getTxBytes(self, port_number):
         return self.ports[port_number]['tx_bytes']
-
-    def getRxBytesRate(self, port_number, lldp_noise=0):
-        p = self.ports[port_number]
-        t2 = p['rx_bytes_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_rx = p['rx_bytes_buffer'][t1]
-        t2_rx = p['rx_bytes_buffer'][t2]
-        if t2_rx == 0:
-            return 0
-        return float(t1_rx - t2_rx - lldp_noise) / config.DELTA_WINDOW
-
-    def getRxPacketsRate(self, port_number, lldp_noise=0):
-        p = self.ports[port_number]
-        t2 = p['rx_packets_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_rx = p['rx_packets_buffer'][t1]
-        t2_rx = p['rx_packets_buffer'][t2]
-        if t2_rx == 0:
-            return 0
-        return float(t1_rx - t2_rx - lldp_noise) / config.DELTA_WINDOW
-
-    def getTxBytesRate(self, port_number, lldp_noise=0):
-        p = self.ports[port_number]
-        t2 = p['tx_bytes_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_tx = p['tx_bytes_buffer'][t1]
-        t2_tx = p['tx_bytes_buffer'][t2]
-        if t2_tx == 0:
-            return 0
-        return float(t1_tx - t2_tx - lldp_noise) / config.DELTA_WINDOW
-
-    def getTxPacketsRate(self, port_number, lldp_noise=0):
-        p = self.ports[port_number]
-        t2 = p['tx_packets_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_tx = p['tx_packets_buffer'][t1]
-        t2_tx = p['tx_packets_buffer'][t2]
-        if t2_tx == 0:
-            return 0
-        return float(t1_tx - t2_tx - lldp_noise) / config.DELTA_WINDOW
-
-    def getSDNRxBytesRate(self, port_number):
-        p = self.ports[port_number]
-        t2 = p['sdn_rx_bytes_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_rx = p['sdn_rx_bytes_buffer'][t1]
-        t2_rx = p['sdn_rx_bytes_buffer'][t2]
-        if t2_rx == 0:
-            return 0
-        return float(t1_rx - t2_rx) / config.DELTA_WINDOW
-
-    def getSDNRxPacketsRate(self, port_number):
-        p = self.ports[port_number]
-        t2 = p['sdn_rx_packets_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_rx = p['sdn_rx_packets_buffer'][t1]
-        t2_rx = p['sdn_rx_packets_buffer'][t2]
-        if t2_rx == 0:
-            return 0
-        return float(t1_rx - t2_rx) / config.DELTA_WINDOW
-
-    def getSDNTxBytesRate(self, port_number):
-        p = self.ports[port_number]
-        t2 = p['sdn_tx_bytes_buffer_index']
-        t1 = (t2 - 1) % config.DELTA_WINDOW
-        t1_tx = p['sdn_tx_bytes_buffer'][t1]
-        t2_tx = p['sdn_tx_bytes_buffer'][t2]
-        if t2_tx == 0:
-            return 0
-        return float(t1_tx - t2_tx) / config.DELTA_WINDOW
 
     def getSDNTxPacketsRate(self, port_number):
         p = self.ports[port_number]
