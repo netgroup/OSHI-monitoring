@@ -105,9 +105,9 @@ class SimpleMonitor(app_manager.RyuApp):
             if int(stat.port_no) > 1000:
                 continue
             ss.set_rx_bytes(stat.port_no, stat.rx_bytes)
-            ss.setTxBytes(stat.port_no, stat.tx_bytes)
-            ss.setRxPackets(stat.port_no, stat.rx_packets)
-            ss.setTxPackets(stat.port_no, stat.tx_packets)
+            ss.set_tx_bytes(stat.port_no, stat.tx_bytes)
+            ss.set_rx_packets(stat.port_no, stat.rx_packets)
+            ss.set_tx_packets(stat.port_no, stat.tx_packets)
         ss.updateSDNStats()
         # save stats
         # f_b.write(ss.getBytesStats())
