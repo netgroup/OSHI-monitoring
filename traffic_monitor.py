@@ -108,7 +108,7 @@ class SimpleMonitor(app_manager.RyuApp):
             ss.set_tx_bytes(stat.port_no, stat.tx_bytes)
             ss.set_rx_packets(stat.port_no, stat.rx_packets)
             ss.set_tx_packets(stat.port_no, stat.tx_packets)
-        ss.updateSDNStats()
+        ss.update_sdn_stats()
         # save stats
         # f_b.write(ss.getBytesStats())
         # f_p.write(ss.getPacketsStats())

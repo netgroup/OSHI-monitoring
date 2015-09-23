@@ -324,7 +324,12 @@ class SwitchStats:
             return 1
         return 0
 
-    def updateSDNStats(self):
+    def update_sdn_stats(self):
+        """
+        Update SDN stats for every port registered in this SwitchStats
+
+        :return:
+        """
         self.__seconds_from_start += 1
         for port_number in self.ports:
             p = self.ports[port_number]
