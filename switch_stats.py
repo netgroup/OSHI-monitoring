@@ -1,5 +1,7 @@
 import config
 
+RX_BYTES = 'rx_bytes'
+
 
 class SwitchStats:
     def __init__(self, datapath):
@@ -14,7 +16,7 @@ class SwitchStats:
         :param port_number: port number of the port to add
         """
         self.ports[port_number] = {}
-        self.ports[port_number]['rx_bytes'] = 0
+        self.ports[port_number][RX_BYTES] = 0
         self.ports[port_number]['rx_bytes_buffer'] = [0] * config.DELTA_WINDOW
         self.ports[port_number]['rx_bytes_buffer_index'] = 0
         self.ports[port_number]['tx_bytes'] = 0
@@ -111,7 +113,7 @@ class SwitchStats:
         :param port_number:
         :return: bytes count
         """
-        return self.ports[port_number]['rx_bytes']
+        return self.ports[port_number][RX_BYTES]
 
     def get_tx_bytes(self, port_number):
         """
@@ -176,7 +178,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, 'rx_bytes_buffer_index', 'rx_bytes_buffer', 'rx_bytes', rx_bytes, lldp_noise)
+        self._update_stat(port_number, 'rx_bytes_buffer_index', 'rx_bytes_buffer', RX_BYTES, rx_bytes, lldp_noise)
 
     def set_tx_bytes(self, port_number, tx_bytes, lldp_noise=0):
         """
