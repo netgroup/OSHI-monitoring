@@ -45,6 +45,17 @@ class RRDManager(object):
         return int(math.floor(time.time()))
 
     @staticmethod
+    def _build_rrd_file_name(device_name, port_number):
+        """
+        Build RRD file name composing device_name and port_number.
+
+        :param device_name:
+        :param port_number:
+        :return:
+        """
+        return str(str(device_name) + str(port_number))
+
+    @staticmethod
     def _build_rrd_data_source_definition(device_id, port_n):
         return str(str(device_id) + '_' + str(port_n))
 
