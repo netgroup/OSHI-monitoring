@@ -76,9 +76,6 @@ class RRDManager(object):
         :param data_source_definitions:
         :return:
         """
-        # TODO: move this to traffic monitor
-        self.data_source_names = {'tx_bytes', 'tx_packets', 'tx_sdn_bytes', 'tx_sdn_packets'
-                                  'rx_bytes', 'rx_packets', 'rx_sdn_bytes', 'rx_sdn_packets'}
         # build RRD data sources
         self.data_source_names = []
         data_sources = []
