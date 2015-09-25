@@ -22,6 +22,10 @@ fh.setFormatter(formatter)
 log.addHandler(ch)
 log.addHandler(fh)
 
+DATA_SOURCE_NAME_KEY = 'data_source_name'
+DATA_SOURCE_TYPE_KEY = 'data_source_type'
+DATA_SOURCE_HEARTBEAT = 'data_source_heartbeat'
+
 
 class RRDManager(object):
     XFF1 = "0.5"
@@ -56,44 +60,69 @@ class RRDManager(object):
         return str(str(device_name) + "_" + str(port_number) + ".rrd")
 
     # noinspection PyMethodMayBeStatic
-    def _build_rrd_data_source(self, data_source_name):
+    def _build_rrd_data_source(self, data_source_name, data_source_type, heartbeat):
         """
 
         :rtype : str
         """
-        return 'DS:' + data_source_name + ':GAUGE:600:U:U'
+        return 'DS:' + data_source_name + ':' + data_source_type + ':' + heartbeat + ':U:U'
 
-    def __init__(self, device_name, port_number):
+    def __init__(self, device_name, port_number, data_source_definitions):
+        """
+
+
+        :param device_name:
+        :param port_number:
+        :param data_source_definitions:
+        :return:
+        """
+        # TODO: move this to traffic monitor
         self.data_source_names = {'tx_bytes', 'tx_packets', 'tx_sdn_bytes', 'tx_sdn_packets'
                                   'rx_bytes', 'rx_packets', 'rx_sdn_bytes', 'rx_sdn_packets'}
-        # define rrd filename
-        self.filename = join(config.RRD_STORE_PATH, self._build_rrd_file_name(device_name, port_number))
-        log.debug("New RRD file name: %s", self.filename)
-
         # build RRD data sources
-        self.data_sources = []
+        self.data_source_names = []
+        data_sources = []
 
-        for data_source_name in self.data_source_names:
-            data_source_definition = self._build_rrd_data_source(data_source_name)
-            self.data_sources.append(data_source_definition)
-            log.debug("Build RRD data source from %s . Result: %s", data_source_name, data_source_definition)
+        for data_source_definition in data_source_definitions:
+            try:
+                data_source_name = data_source_definition[DATA_SOURCE_NAME_KEY]
+                self.data_source_names.append(data_source_name)
+                data_source_type = data_source_definition[DATA_SOURCE_TYPE_KEY]
+                data_source_heartbeat = data_source_definition[DATA_SOURCE_HEARTBEAT]
+            except KeyError:
+                log.error("Unable to initialize RRD data source. Field missing. Data source will not be available")
+                continue
 
-        log.debug("Prepared RRD initialization. File name: %s, Data sources: %s", self.filename, self.data_sources)
-        # noinspection PyArgumentList
-        rrdtool.create(self.filename,
-                       '--step',
-                       config.RRD_STEP,
-                       '--start',
-                       str(self._get_current_time_in_seconds()),
-                       self.data_sources,
-                       'RRA:AVERAGE:' + self.XFF1 + ':' + self.STEP1 + ':' + self.ROWS1,  # every 5 mins for 2 hrs
-                       'RRA:AVERAGE:' + self.XFF2 + ':' + self.STEP2 + ':' + self.ROWS2,  # every 30 mins for 5 hrs
-                       'RRA:AVERAGE:' + self.XFF3 + ':' + self.STEP3 + ':' + self.ROWS3,  # every 1 hrs for 1 day
-                       'RRA:AVERAGE:' + self.XFF4 + ':' + self.STEP4 + ':' + self.ROWS4,  # every day for a week
-                       'RRA:AVERAGE:' + self.XFF5 + ':' + self.STEP5 + ':' + self.ROWS5)  # every week for 4 weeks
-        log.debug("%s initialized", self.filename)
+            data_source_definition = self._build_rrd_data_source(data_source_name, data_source_type,
+                                                                 data_source_heartbeat)
+            data_sources.append(data_source_definition)
+            log.debug("Build RRD data source. Name: %s, type: %s, heartbeat: %s. Result: %s", data_source_name,
+                      data_source_type, data_source_heartbeat, data_source_definition)
+
+        if len(data_sources) > 0:
+            # define rrd filename
+            self.filename = join(config.RRD_STORE_PATH, self._build_rrd_file_name(device_name, port_number))
+            log.debug("New RRD file name: %s", self.filename)
+            log.debug("Prepared RRD initialization. File name: %s, Data sources: %s", self.filename, data_sources)
+            # noinspection PyArgumentList
+            rrdtool.create(self.filename,
+                           '--step',
+                           config.RRD_STEP,
+                           '--start',
+                           str(self._get_current_time_in_seconds()),
+                           data_sources,
+                           'RRA:AVERAGE:' + self.XFF1 + ':' + self.STEP1 + ':' + self.ROWS1,  # every 5 mins for 2 hrs
+                           'RRA:AVERAGE:' + self.XFF2 + ':' + self.STEP2 + ':' + self.ROWS2,  # every 30 mins for 5 hrs
+                           'RRA:AVERAGE:' + self.XFF3 + ':' + self.STEP3 + ':' + self.ROWS3,  # every 1 hrs for 1 day
+                           'RRA:AVERAGE:' + self.XFF4 + ':' + self.STEP4 + ':' + self.ROWS4,  # every day for a week
+                           'RRA:AVERAGE:' + self.XFF5 + ':' + self.STEP5 + ':' + self.ROWS5)  # every week for 4 weeks
+            log.debug("%s initialized", self.filename)
+        else:
+            log.debug("No data sources initialized, skipping RRD file creation.")
 
     def update(self, values):
+        if len(self.data_source_names) == 0:
+            raise IndexError('No data sources defined')
         if len(self.data_source_names) != len(values):
             raise IndexError('Wrong number of values')
         template = ':'.join(self.data_source_names)
