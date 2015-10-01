@@ -6,7 +6,7 @@ RX_BYTES_BUFFER = 'rx_bytes_buffer'
 
 class SwitchStats:
     def __init__(self, datapath):
-        self.dp = datapath
+        self.data_path = datapath
         self.ports = {}
         self.__seconds_from_start = 0
 
@@ -80,7 +80,7 @@ class SwitchStats:
 
         :return: datapath
         """
-        return self.dp
+        return self.data_path
 
     def set_ip_partner_port_number(self, port_number, partner_port_number):
         """

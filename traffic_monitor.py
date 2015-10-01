@@ -39,7 +39,7 @@ class SimpleMonitor(app_manager.RyuApp):
         while True:
             log.debug("Sending PORT stats requests")
             for switch_stat in self.switch_stats.values():
-                data_path = switch_stat.dp
+                data_path = switch_stat.data_path
                 open_flow_protocol = data_path.ofproto
                 parser = data_path.ofproto_parser
                 req = parser.OFPPortStatsRequest(data_path, 0, open_flow_protocol.OFPP_ANY)
