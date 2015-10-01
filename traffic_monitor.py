@@ -31,14 +31,14 @@ log.addHandler(fh)
 class SimpleMonitor(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleMonitor, self).__init__(*args, **kwargs)
-        self.stats = {}
+        self.switch_stats = {}
         self.monitor_thread = hub.spawn(self._monitor)
 
     def _monitor(self):
         log.info("Started monitor thread.")
         while True:
             log.debug("Sending PORT stats requests")
-            for switch_stat in self.stats.values():
+            for switch_stat in self.switch_stats.values():
                 data_path = switch_stat.dp
                 open_flow_protocol = data_path.ofproto
                 parser = data_path.ofproto_parser
@@ -52,9 +52,9 @@ class SimpleMonitor(app_manager.RyuApp):
         datapath = ev.datapath
         ofp_parser = datapath.ofproto_parser
         if ev.state == MAIN_DISPATCHER:
-            if datapath.id not in self.stats:
+            if datapath.id not in self.switch_stats:
                 log.info("register datapath: %s", datapath.id)
-                self.stats[datapath.id] = SwitchStats(datapath)
+                self.switch_stats[datapath.id] = SwitchStats(datapath)
                 req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
                 datapath.send_msg(req)
                 ofproto = datapath.ofproto
@@ -65,13 +65,13 @@ class SimpleMonitor(app_manager.RyuApp):
                                                  ofproto.OFPP_ANY, ofproto.OFPG_ANY, cookie, cookie_mask)
                 datapath.send_msg(req)
         elif ev.state == DEAD_DISPATCHER:
-            if datapath.id in self.stats:
+            if datapath.id in self.switch_stats:
                 log.info("Unregister datapath: %s", datapath.id)
-                del self.stats[datapath.id]
+                del self.switch_stats[datapath.id]
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
-        ss = self.stats[ev.msg.datapath.id]
+        ss = self.switch_stats[ev.msg.datapath.id]
         for p in sorted(ev.msg.body, key=attrgetter('port_no')):
             if int(p.port_no) > 1000:
                 continue
@@ -82,7 +82,7 @@ class SimpleMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
         log.debug("FLOW stats received from %s", ev.msg.datapath.id)
-        ss = self.stats[ev.msg.datapath.id]
+        ss = self.switch_stats[ev.msg.datapath.id]
         body = ev.msg.body
         for flow_stat in body:
             try:
@@ -99,7 +99,7 @@ class SimpleMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
-        ss = self.stats[ev.msg.datapath.id]
+        ss = self.switch_stats[ev.msg.datapath.id]
         for stat in sorted(body, key=attrgetter('port_no')):
             if int(stat.port_no) > 1000:
                 continue
