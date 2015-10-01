@@ -69,7 +69,7 @@ class RRDManager(object):
 
         :param device_name:
         :param port_number:
-        :param data_source_definitions: list of RRDDataSource s
+        :param data_source_definitions: list of RRDDataSource
         :return:
 
         :type data_source_definitions: list
