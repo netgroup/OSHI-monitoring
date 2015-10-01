@@ -22,10 +22,6 @@ fh.setFormatter(formatter)
 log.addHandler(ch)
 log.addHandler(fh)
 
-DATA_SOURCE_NAME_KEY = 'data_source_name'
-DATA_SOURCE_TYPE_KEY = 'data_source_type'
-DATA_SOURCE_HEARTBEAT_KEY = 'data_source_heartbeat'
-
 
 class RRDManager(object):
     XFF1 = "0.5"
@@ -73,9 +69,7 @@ class RRDManager(object):
 
         :param device_name:
         :param port_number:
-        :param data_source_definitions: list of dictionaries where each entry defines name, type and heartbeat of the
-            data source. Use the constants defined in rrdmanager as dictionary keys (DATA_SOURCE_NAME_KEY,
-            DATA_SOURCE_TYPE_KEY and DATA_SOURCE_HEARTBEAT_KEY)
+        :param data_source_definitions: list of RRDDataSource s
         :return:
 
         :type data_source_definitions: list
@@ -87,10 +81,10 @@ class RRDManager(object):
 
         for data_source_definition in data_source_definitions:
             try:
-                data_source_name = data_source_definition[DATA_SOURCE_NAME_KEY]
+                data_source_name = data_source_definition.name
                 self.data_source_names.append(data_source_name)
-                data_source_type = data_source_definition[DATA_SOURCE_TYPE_KEY]
-                data_source_heartbeat = data_source_definition[DATA_SOURCE_HEARTBEAT_KEY]
+                data_source_type = data_source_definition.data_source_type
+                data_source_heartbeat = data_source_definition.heartbeat
             except KeyError:
                 log.error("Unable to initialize RRD data source. Field missing. Data source will not be available")
                 continue
