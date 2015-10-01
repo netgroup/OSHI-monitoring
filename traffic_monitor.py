@@ -8,6 +8,8 @@ from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 from ryu.base import app_manager
 import config
+from rrd_data_source import RRDDataSource
+from rrdmanager import RRDManager
 from switch_stats import SwitchStats
 import logging
 
@@ -32,6 +34,7 @@ class SimpleMonitor(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleMonitor, self).__init__(*args, **kwargs)
         self.switch_stats = {}
+        self.rrd_managers = {}
         self.monitor_thread = hub.spawn(self._monitor)
 
     def _monitor(self):
@@ -72,7 +75,8 @@ class SimpleMonitor(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
-        ss = self.switch_stats[ev.msg.datapath.id]
+        data_path_id = ev.msg.datapath.id
+        ss = self.switch_stats[data_path_id]
         """ :type : SwitchStats """
         for p in sorted(ev.msg.body, key=attrgetter('port_no')):
             if int(p.port_no) > 1000:
@@ -80,6 +84,10 @@ class SimpleMonitor(app_manager.RyuApp):
             ss.add_port(p.port_no)
             ss.set_port_name(p.port_no, p.name)
             log.info("Added port (%s, %s) to %s ", p.port_no, p.name, ev.msg.datapath.id)
+            # TODO: init RRD data sources according to stats defined in SwitchStats
+
+            log.info("Creating RRD Manager for %s ", ev.msg.datapath.id)
+            # TODO: create an RRD manager with the defined RRD data sources for port
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
