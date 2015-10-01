@@ -37,12 +37,13 @@ class SimpleMonitor(app_manager.RyuApp):
     def _monitor(self):
         log.info("Started monitor thread.")
         while True:
-            log.debug("Send PORT stats requests")
+            log.debug("Sending PORT stats requests")
             for switch_stat in self.stats.values():
                 data_path = switch_stat.dp
                 open_flow_protocol = data_path.ofproto
                 parser = data_path.ofproto_parser
                 req = parser.OFPPortStatsRequest(data_path, 0, open_flow_protocol.OFPP_ANY)
+                log.debug("Sending PORT stats request: %s", str(req))
                 data_path.send_msg(req)
             hub.sleep(config.REQUEST_INTERVAL)
 
