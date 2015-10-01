@@ -73,12 +73,13 @@ class SimpleMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
         ss = self.switch_stats[ev.msg.datapath.id]
+        """ :type : SwitchStats """
         for p in sorted(ev.msg.body, key=attrgetter('port_no')):
             if int(p.port_no) > 1000:
                 continue
             ss.add_port(p.port_no)
-            ss.setPortName(p.port_no, p.name)
-            log.info("%s add port: %s, %s", ev.msg.datapath.id, p.port_no, p.name)
+            ss.set_port_name(p.port_no, p.name)
+            log.info("Added port (%s, %s) to %s ", p.port_no, p.name, ev.msg.datapath.id)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
@@ -101,6 +102,7 @@ class SimpleMonitor(app_manager.RyuApp):
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
         switch_stats = self.switch_stats[ev.msg.datapath.id]
+        """ :type : SwitchStats """
         for stat in sorted(body, key=attrgetter('port_no')):
             if int(stat.port_no) > 1000:
                 continue
