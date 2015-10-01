@@ -1,7 +1,36 @@
 import config
 
+SDN_RX_PACKETS_BUFFER_INDEX = 'sdn_rx_packets_buffer_index'
+
+SDN_RX_PACKETS_BUFFER = 'sdn_rx_packets_buffer'
+
+SDN_TX_BYTES_BUFFER_INDEX = 'sdn_tx_bytes_buffer_index'
+
+SDN_TX_BYTES_BUFFER = 'sdn_tx_bytes_buffer'
+
+SDN_BYTES_BUFFER_INDEX = 'sdn_rx_bytes_buffer_index'
+
+SDN_RX_BYTES_BUFFER = 'sdn_rx_bytes_buffer'
+
+TX_PACKETS_BUFFER_INDEX = 'tx_packets_buffer_index'
+
+TX_PACKETS_BUFFER = 'tx_packets_buffer'
+
+TX_PACKETS = 'tx_packets'
+
+RX_PACKETS_BUFFER_INDEX = 'rx_packets_buffer_index'
+
+RX_PACKETS_BUFFER = 'rx_packets_buffer'
+
+RX_PACKETS = 'rx_packets'
+
+TX_BYTES_BUFFER_INDEX = 'tx_bytes_buffer_index'
+
 RX_BYTES = 'rx_bytes'
 RX_BYTES_BUFFER = 'rx_bytes_buffer'
+RX_BYTES_BUFFER_INDEX = 'rx_bytes_buffer_index'
+TX_BYTES = 'tx_bytes'
+TX_BYTES_BUFFER = 'tx_bytes_buffer'
 
 
 class SwitchStats:
@@ -19,23 +48,23 @@ class SwitchStats:
         self.ports[port_number] = {}
         self.ports[port_number][RX_BYTES] = 0
         self.ports[port_number][RX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['rx_bytes_buffer_index'] = 0
-        self.ports[port_number]['tx_bytes'] = 0
-        self.ports[port_number]['tx_bytes_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['tx_bytes_buffer_index'] = 0
-        self.ports[port_number]['rx_packets'] = 0
-        self.ports[port_number]['rx_packets_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['rx_packets_buffer_index'] = 0
-        self.ports[port_number]['tx_packets'] = 0
-        self.ports[port_number]['tx_packets_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['tx_packets_buffer_index'] = 0
+        self.ports[port_number][RX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][TX_BYTES] = 0
+        self.ports[port_number][TX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][TX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][RX_PACKETS] = 0
+        self.ports[port_number][RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][RX_PACKETS_BUFFER_INDEX] = 0
+        self.ports[port_number][TX_PACKETS] = 0
+        self.ports[port_number][TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][TX_PACKETS_BUFFER_INDEX] = 0
         # SDN BUFFERS
-        self.ports[port_number]['sdn_rx_bytes_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['sdn_rx_bytes_buffer_index'] = 0
-        self.ports[port_number]['sdn_tx_bytes_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['sdn_tx_bytes_buffer_index'] = 0
-        self.ports[port_number]['sdn_rx_packets_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['sdn_rx_packets_buffer_index'] = 0
+        self.ports[port_number][SDN_RX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][SDN_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][SDN_TX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][SDN_TX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][SDN_RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][SDN_RX_PACKETS_BUFFER_INDEX] = 0
         self.ports[port_number]['sdn_tx_packets_buffer'] = [0] * config.DELTA_WINDOW
         self.ports[port_number]['sdn_tx_packets_buffer_index'] = 0
 
@@ -123,7 +152,7 @@ class SwitchStats:
         :param port_number:
         :return: bytes count
         """
-        return self.ports[port_number]['tx_bytes']
+        return self.ports[port_number][TX_BYTES]
 
     def get_rx_packets(self, port_number):
         """
@@ -179,7 +208,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, 'rx_bytes_buffer_index', RX_BYTES_BUFFER, RX_BYTES, rx_bytes, lldp_noise)
+        self._update_stat(port_number, RX_BYTES_BUFFER_INDEX, RX_BYTES_BUFFER, RX_BYTES, rx_bytes, lldp_noise)
 
     def set_tx_bytes(self, port_number, tx_bytes, lldp_noise=0):
         """
@@ -190,7 +219,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, 'tx_bytes_buffer_index', 'tx_bytes_buffer', 'tx_bytes', tx_bytes, lldp_noise)
+        self._update_stat(port_number, 'tx_bytes_buffer_index', TX_BYTES_BUFFER, TX_BYTES, tx_bytes, lldp_noise)
 
     def set_rx_packets(self, port_number, rx_packets, lldp_noise=0):
         """
