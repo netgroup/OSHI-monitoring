@@ -53,20 +53,21 @@ class SimpleMonitor(app_manager.RyuApp):
         ofp_parser = datapath.ofproto_parser
         if ev.state == MAIN_DISPATCHER:
             if datapath.id not in self.switch_stats:
-                log.info("register datapath: %s", datapath.id)
+                log.info("Received MAIN_DISPATCHER event. Register datapath: %s", datapath.id)
                 self.switch_stats[datapath.id] = SwitchStats(datapath)
                 req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
                 datapath.send_msg(req)
-                ofproto = datapath.ofproto
+                open_flow_protocol = datapath.ofproto
                 parser = datapath.ofproto_parser
                 cookie = cookie_mask = 0
                 req = parser.OFPFlowStatsRequest(datapath, 0,
-                                                 ofproto.OFPTT_ALL,
-                                                 ofproto.OFPP_ANY, ofproto.OFPG_ANY, cookie, cookie_mask)
+                                                 open_flow_protocol.OFPTT_ALL,
+                                                 open_flow_protocol.OFPP_ANY, open_flow_protocol.OFPG_ANY, cookie,
+                                                 cookie_mask)
                 datapath.send_msg(req)
         elif ev.state == DEAD_DISPATCHER:
             if datapath.id in self.switch_stats:
-                log.info("Unregister datapath: %s", datapath.id)
+                log.info("Received DEAD_DISPATCHER event. De-register datapath: %s", datapath.id)
                 del self.switch_stats[datapath.id]
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
@@ -99,15 +100,15 @@ class SimpleMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         body = ev.msg.body
-        ss = self.switch_stats[ev.msg.datapath.id]
+        switch_stats = self.switch_stats[ev.msg.datapath.id]
         for stat in sorted(body, key=attrgetter('port_no')):
             if int(stat.port_no) > 1000:
                 continue
-            ss.set_rx_bytes(stat.port_no, stat.rx_bytes)
-            ss.set_tx_bytes(stat.port_no, stat.tx_bytes)
-            ss.set_rx_packets(stat.port_no, stat.rx_packets)
-            ss.set_tx_packets(stat.port_no, stat.tx_packets)
-        ss.update_sdn_stats()
+            switch_stats.set_rx_bytes(stat.port_no, stat.rx_bytes)
+            switch_stats.set_tx_bytes(stat.port_no, stat.tx_bytes)
+            switch_stats.set_rx_packets(stat.port_no, stat.rx_packets)
+            switch_stats.set_tx_packets(stat.port_no, stat.tx_packets)
+        switch_stats.update_sdn_stats()
         # save stats
         # f_b.write(ss.getBytesStats())
         # f_p.write(ss.getPacketsStats())
