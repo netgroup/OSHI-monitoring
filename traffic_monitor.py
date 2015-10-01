@@ -38,15 +38,13 @@ class SimpleMonitor(app_manager.RyuApp):
         log.info("Started monitor thread.")
         while True:
             log.debug("Send PORT stats requests")
-            for ss in self.stats.values():
-                self._request_stats(ss.dp)
+            for switch_stat in self.stats.values():
+                data_path = switch_stat.dp
+                open_flow_protocol = data_path.ofproto
+                parser = data_path.ofproto_parser
+                req = parser.OFPPortStatsRequest(data_path, 0, open_flow_protocol.OFPP_ANY)
+                data_path.send_msg(req)
             hub.sleep(config.REQUEST_INTERVAL)
-
-    def _request_stats(self, datapath):
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
-        datapath.send_msg(req)
 
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
