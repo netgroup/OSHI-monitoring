@@ -18,6 +18,10 @@ SDN_TX_BYTES_BUFFER = 'sdn_tx_bytes_buffer'
 SDN_TX_BYTES_BUFFER_INDEX = 'sdn_tx_bytes_buffer_index'
 SDN_RX_PACKETS_BUFFER = 'sdn_rx_packets_buffer'
 SDN_RX_PACKETS_BUFFER_INDEX = 'sdn_rx_packets_buffer_index'
+SDN_TX_PACKETS_BUFFER = 'sdn_tx_packets_buffer'
+SDN_TX_PACKETS_BUFFER_INDEX = 'sdn_tx_packets_buffer_index'
+IP_PARTNER_PORT_NUMBER = 'ip_partner_port_number'
+PORT_NAME = 'name'
 
 
 class SwitchStats:
@@ -52,8 +56,8 @@ class SwitchStats:
         self.ports[port_number][SDN_TX_BYTES_BUFFER_INDEX] = 0
         self.ports[port_number][SDN_RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
         self.ports[port_number][SDN_RX_PACKETS_BUFFER_INDEX] = 0
-        self.ports[port_number]['sdn_tx_packets_buffer'] = [0] * config.DELTA_WINDOW
-        self.ports[port_number]['sdn_tx_packets_buffer_index'] = 0
+        self.ports[port_number][SDN_TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][SDN_TX_PACKETS_BUFFER_INDEX] = 0
 
     def delete_port(self, port_number):
         """
@@ -79,7 +83,7 @@ class SwitchStats:
         :param port_number
         :param port_name: name to set
         """
-        self.ports[port_number]['name'] = port_name
+        self.ports[port_number][PORT_NAME] = port_name
 
     def get_port_name(self, port_number):
         """
@@ -88,7 +92,7 @@ class SwitchStats:
         :param port_number:
         :return: port name
         """
-        return self.ports[port_number]['name']
+        return self.ports[port_number][PORT_NAME]
 
     def get_datapath(self):
         """
@@ -109,7 +113,7 @@ class SwitchStats:
         :param port_number:
         :param partner_port_number:
         """
-        self.ports[port_number]['ip_partner_port_number'] = partner_port_number
+        self.ports[port_number][IP_PARTNER_PORT_NUMBER] = partner_port_number
 
     def get_ip_partner_port_number(self, port_number):
         """
@@ -118,8 +122,8 @@ class SwitchStats:
         :param port_number:
         :return: Partner port number or -1 if no relationship has been defined for the specified port number.
         """
-        if 'ip_partner_port_number' in self.ports[port_number]:
-            return self.ports[port_number]['ip_partner_port_number']
+        if IP_PARTNER_PORT_NUMBER in self.ports[port_number]:
+            return self.ports[port_number][IP_PARTNER_PORT_NUMBER]
         else:
             raise KeyError('IP partner not found for port ' + port_number)
 
@@ -271,7 +275,7 @@ class SwitchStats:
         :param port_number:
         :return: SDN traffic expressed in packets
         """
-        return self._get_sdn_stat(port_number, 'sdn_tx_packets_buffer_index', 'sdn_tx_packets_buffer')
+        return self._get_sdn_stat(port_number, SDN_TX_PACKETS_BUFFER_INDEX, SDN_TX_PACKETS_BUFFER)
 
     def __get_sdn_rx_bytes(self, port_number):
         """
@@ -363,7 +367,7 @@ class SwitchStats:
             p[SDN_RX_PACKETS_BUFFER_INDEX] = (p[SDN_RX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
             p[SDN_RX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_rx_packets(port_number) + (
                 self.__seconds_from_start * config.LLDP_NOISE_PACK_S * rx_noise)
-            t1_sdn = p['sdn_tx_packets_buffer_index']
-            p['sdn_tx_packets_buffer_index'] = (p['sdn_tx_packets_buffer_index'] + 1) % config.DELTA_WINDOW
-            p['sdn_tx_packets_buffer'][t1_sdn] = self.__get_sdn_tx_packets(port_number) - (
+            t1_sdn = p[SDN_TX_PACKETS_BUFFER_INDEX]
+            p[SDN_TX_PACKETS_BUFFER_INDEX] = (p[SDN_TX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
+            p[SDN_TX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_tx_packets(port_number) - (
                 self.__seconds_from_start * config.LLDP_NOISE_PACK_S)
