@@ -76,13 +76,11 @@ class RRDManager(object):
 
         """
         # build RRD data sources
-        self.data_source_names = []
         data_sources = []
 
         for data_source_definition in data_source_definitions:
             try:
                 data_source_name = data_source_definition.name
-                self.data_source_names.append(data_source_name)
                 data_source_type = data_source_definition.data_source_type
                 data_source_heartbeat = data_source_definition.heartbeat
             except KeyError:
@@ -115,14 +113,20 @@ class RRDManager(object):
         else:
             log.debug("No data sources initialized, skipping RRD file creation.")
 
-    def update(self, values):
-        if len(self.data_source_names) == 0:
-            raise IndexError('No data sources defined')
-        if len(self.data_source_names) != len(values):
-            raise IndexError('Wrong number of values')
-        template = ':'.join(self.data_source_names)
-        values = ':'.join(str(value) for value in values)
-        log.debug("Update %s . Template: %s . Values: %s", self.filename, template, values)
-        # noinspection PyArgumentList
-        rrdtool.update(self.filename, '-t', template, str(self._get_current_time_in_seconds()) + ':' + values)
-        log.debug("%s Updated", self.filename)
+    def update(self, rrd_data_sources):
+        if len(rrd_data_sources) > 0:
+            data_source_names = []
+            data_source_values = []
+
+            for rrd_data_source in rrd_data_sources:
+                data_source_names.append(rrd_data_source.name)
+                data_source_values.append(rrd_data_source.temp_value)
+
+            template = ':'.join(self.data_source_names)
+            values = ':'.join(str(value) for value in data_source_values)
+            log.debug("Update %s . Template: %s . Values: %s", self.filename, template, values)
+            # noinspection PyArgumentList
+            rrdtool.update(self.filename, '-t', template, str(self._get_current_time_in_seconds()) + ':' + values)
+            log.debug("%s Updated", self.filename)
+        else:
+            log.info("No update is necessary as no data sources are defined.")
