@@ -1,25 +1,36 @@
 import config
 
+_RX_BYTES_BUFFER = 'rx_bytes_buffer'
+_RX_BYTES_BUFFER_INDEX = 'rx_bytes_buffer_index'
+_TX_BYTES_BUFFER = 'tx_bytes_buffer'
+_TX_BYTES_BUFFER_INDEX = 'tx_bytes_buffer_index'
+_RX_PACKETS_BUFFER = 'rx_packets_buffer'
+_RX_PACKETS_BUFFER_INDEX = 'rx_packets_buffer_index'
+_TX_PACKETS_BUFFER = 'tx_packets_buffer'
+_TX_PACKETS_BUFFER_INDEX = 'tx_packets_buffer_index'
+_SDN_RX_BYTES_BUFFER = 'sdn_rx_bytes_buffer'
+_SDN_RX_BYTES_BUFFER_INDEX = 'sdn_rx_bytes_buffer_index'
+_SDN_TX_BYTES_BUFFER = 'sdn_tx_bytes_buffer'
+_SDN_TX_BYTES_BUFFER_INDEX = 'sdn_tx_bytes_buffer_index'
+_SDN_RX_PACKETS_BUFFER = 'sdn_rx_packets_buffer'
+_SDN_RX_PACKETS_BUFFER_INDEX = 'sdn_rx_packets_buffer_index'
+_SDN_TX_PACKETS_BUFFER = 'sdn_tx_packets_buffer'
+_SDN_TX_PACKETS_BUFFER_INDEX = 'sdn_tx_packets_buffer_index'
+
 RX_BYTES = 'rx_bytes'
-RX_BYTES_BUFFER = 'rx_bytes_buffer'
-RX_BYTES_BUFFER_INDEX = 'rx_bytes_buffer_index'
 TX_BYTES = 'tx_bytes'
-TX_BYTES_BUFFER = 'tx_bytes_buffer'
-TX_BYTES_BUFFER_INDEX = 'tx_bytes_buffer_index'
 RX_PACKETS = 'rx_packets'
-RX_PACKETS_BUFFER = 'rx_packets_buffer'
-RX_PACKETS_BUFFER_INDEX = 'rx_packets_buffer_index'
 TX_PACKETS = 'tx_packets'
-TX_PACKETS_BUFFER = 'tx_packets_buffer'
-TX_PACKETS_BUFFER_INDEX = 'tx_packets_buffer_index'
-SDN_RX_BYTES_BUFFER = 'sdn_rx_bytes_buffer'
-SDN_BYTES_BUFFER_INDEX = 'sdn_rx_bytes_buffer_index'
-SDN_TX_BYTES_BUFFER = 'sdn_tx_bytes_buffer'
-SDN_TX_BYTES_BUFFER_INDEX = 'sdn_tx_bytes_buffer_index'
-SDN_RX_PACKETS_BUFFER = 'sdn_rx_packets_buffer'
-SDN_RX_PACKETS_BUFFER_INDEX = 'sdn_rx_packets_buffer_index'
-SDN_TX_PACKETS_BUFFER = 'sdn_tx_packets_buffer'
-SDN_TX_PACKETS_BUFFER_INDEX = 'sdn_tx_packets_buffer_index'
+SDN_RX_BYTES = 'sdn_rx_bytes'
+SDN_TX_BYTES = 'sdn_tx_bytes'
+SDN_RX_PACKETS = 'sdn_rx_packets'
+SDN_TX_PACKETS = 'sdn_tx_packets'
+
+PORT_STATS = {RX_BYTES, TX_BYTES,
+              RX_PACKETS, TX_PACKETS,
+              SDN_RX_BYTES, SDN_TX_BYTES,
+              SDN_RX_PACKETS, SDN_TX_PACKETS}
+
 IP_PARTNER_PORT_NUMBER = 'ip_partner_port_number'
 PORT_NAME = 'name'
 
@@ -38,26 +49,26 @@ class SwitchStats:
         """
         self.ports[port_number] = {}
         self.ports[port_number][RX_BYTES] = 0
-        self.ports[port_number][RX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][RX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][_RX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_RX_BYTES_BUFFER_INDEX] = 0
         self.ports[port_number][TX_BYTES] = 0
-        self.ports[port_number][TX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][TX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][_TX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_TX_BYTES_BUFFER_INDEX] = 0
         self.ports[port_number][RX_PACKETS] = 0
-        self.ports[port_number][RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][RX_PACKETS_BUFFER_INDEX] = 0
+        self.ports[port_number][_RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_RX_PACKETS_BUFFER_INDEX] = 0
         self.ports[port_number][TX_PACKETS] = 0
-        self.ports[port_number][TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][TX_PACKETS_BUFFER_INDEX] = 0
+        self.ports[port_number][_TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_TX_PACKETS_BUFFER_INDEX] = 0
         # SDN BUFFERS
-        self.ports[port_number][SDN_RX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][SDN_BYTES_BUFFER_INDEX] = 0
-        self.ports[port_number][SDN_TX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][SDN_TX_BYTES_BUFFER_INDEX] = 0
-        self.ports[port_number][SDN_RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][SDN_RX_PACKETS_BUFFER_INDEX] = 0
-        self.ports[port_number][SDN_TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
-        self.ports[port_number][SDN_TX_PACKETS_BUFFER_INDEX] = 0
+        self.ports[port_number][_SDN_RX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_SDN_RX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][_SDN_TX_BYTES_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_SDN_TX_BYTES_BUFFER_INDEX] = 0
+        self.ports[port_number][_SDN_RX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_SDN_RX_PACKETS_BUFFER_INDEX] = 0
+        self.ports[port_number][_SDN_TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
+        self.ports[port_number][_SDN_TX_PACKETS_BUFFER_INDEX] = 0
 
     def delete_port(self, port_number):
         """
@@ -199,7 +210,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, RX_BYTES_BUFFER_INDEX, RX_BYTES_BUFFER, RX_BYTES, rx_bytes, lldp_noise)
+        self._update_stat(port_number, _RX_BYTES_BUFFER_INDEX, _RX_BYTES_BUFFER, RX_BYTES, rx_bytes, lldp_noise)
 
     def set_tx_bytes(self, port_number, tx_bytes, lldp_noise=0):
         """
@@ -210,7 +221,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, TX_BYTES_BUFFER_INDEX, TX_BYTES_BUFFER, TX_BYTES, tx_bytes, lldp_noise)
+        self._update_stat(port_number, _TX_BYTES_BUFFER_INDEX, _TX_BYTES_BUFFER, TX_BYTES, tx_bytes, lldp_noise)
 
     def set_rx_packets(self, port_number, rx_packets, lldp_noise=0):
         """
@@ -221,7 +232,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, RX_PACKETS_BUFFER_INDEX, RX_PACKETS_BUFFER, RX_PACKETS, rx_packets,
+        self._update_stat(port_number, _RX_PACKETS_BUFFER_INDEX, _RX_PACKETS_BUFFER, RX_PACKETS, rx_packets,
                           lldp_noise)
 
     def set_tx_packets(self, port_number, tx_packets, lldp_noise=0):
@@ -233,7 +244,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        self._update_stat(port_number, TX_PACKETS_BUFFER_INDEX, TX_PACKETS_BUFFER, TX_PACKETS, tx_packets,
+        self._update_stat(port_number, _TX_PACKETS_BUFFER_INDEX, _TX_PACKETS_BUFFER, TX_PACKETS, tx_packets,
                           lldp_noise)
 
     def _get_sdn_stat(self, port_number, stat_index_key, stat_key):
@@ -248,7 +259,7 @@ class SwitchStats:
         :param port_number:
         :return: SDN traffic expressed in bytes
         """
-        return self._get_sdn_stat(port_number, SDN_BYTES_BUFFER_INDEX, SDN_RX_BYTES_BUFFER)
+        return self._get_sdn_stat(port_number, _SDN_RX_BYTES_BUFFER_INDEX, _SDN_RX_BYTES_BUFFER)
 
     def get_sdn_rx_packets(self, port_number):
         """
@@ -257,7 +268,7 @@ class SwitchStats:
         :param port_number:
         :return: SDN traffic expressed in packets
         """
-        return self._get_sdn_stat(port_number, SDN_RX_PACKETS_BUFFER_INDEX, SDN_RX_PACKETS_BUFFER)
+        return self._get_sdn_stat(port_number, _SDN_RX_PACKETS_BUFFER_INDEX, _SDN_RX_PACKETS_BUFFER)
 
     def get_sdn_tx_bytes(self, port_number):
         """
@@ -266,7 +277,7 @@ class SwitchStats:
         :param port_number:
         :return: SDN traffic expressed in bytes
         """
-        return self._get_sdn_stat(port_number, SDN_TX_BYTES_BUFFER_INDEX, SDN_TX_BYTES_BUFFER)
+        return self._get_sdn_stat(port_number, _SDN_TX_BYTES_BUFFER_INDEX, _SDN_TX_BYTES_BUFFER)
 
     def get_sdn_tx_packets(self, port_number):
         """
@@ -275,7 +286,7 @@ class SwitchStats:
         :param port_number:
         :return: SDN traffic expressed in packets
         """
-        return self._get_sdn_stat(port_number, SDN_TX_PACKETS_BUFFER_INDEX, SDN_TX_PACKETS_BUFFER)
+        return self._get_sdn_stat(port_number, _SDN_TX_PACKETS_BUFFER_INDEX, _SDN_TX_PACKETS_BUFFER)
 
     def __get_sdn_rx_bytes(self, port_number):
         """
@@ -355,19 +366,19 @@ class SwitchStats:
         for port_number in self.ports:
             p = self.ports[port_number]
             rx_noise = SwitchStats._has_rx_lldp_noise(self.get_port_name(port_number), port_number)
-            t1_sdn = p[SDN_BYTES_BUFFER_INDEX]
-            p[SDN_BYTES_BUFFER_INDEX] = (p[SDN_BYTES_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
-            p[SDN_RX_BYTES_BUFFER][t1_sdn] = self.__get_sdn_rx_bytes(port_number) + (
+            t1_sdn = p[_SDN_RX_BYTES_BUFFER_INDEX]
+            p[_SDN_RX_BYTES_BUFFER_INDEX] = (p[_SDN_RX_BYTES_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
+            p[_SDN_RX_BYTES_BUFFER][t1_sdn] = self.__get_sdn_rx_bytes(port_number) + (
                 self.__seconds_from_start * config.LLDP_NOISE_BYTE_S * rx_noise)
-            t1_sdn = p[SDN_TX_BYTES_BUFFER_INDEX]
-            p[SDN_TX_BYTES_BUFFER_INDEX] = (p[SDN_TX_BYTES_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
-            p[SDN_TX_BYTES_BUFFER][t1_sdn] = self.__get_sdn_tx_bytes(port_number) - (
+            t1_sdn = p[_SDN_TX_BYTES_BUFFER_INDEX]
+            p[_SDN_TX_BYTES_BUFFER_INDEX] = (p[_SDN_TX_BYTES_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
+            p[_SDN_TX_BYTES_BUFFER][t1_sdn] = self.__get_sdn_tx_bytes(port_number) - (
                 self.__seconds_from_start * config.LLDP_NOISE_BYTE_S)
-            t1_sdn = p[SDN_RX_PACKETS_BUFFER_INDEX]
-            p[SDN_RX_PACKETS_BUFFER_INDEX] = (p[SDN_RX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
-            p[SDN_RX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_rx_packets(port_number) + (
+            t1_sdn = p[_SDN_RX_PACKETS_BUFFER_INDEX]
+            p[_SDN_RX_PACKETS_BUFFER_INDEX] = (p[_SDN_RX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
+            p[_SDN_RX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_rx_packets(port_number) + (
                 self.__seconds_from_start * config.LLDP_NOISE_PACK_S * rx_noise)
-            t1_sdn = p[SDN_TX_PACKETS_BUFFER_INDEX]
-            p[SDN_TX_PACKETS_BUFFER_INDEX] = (p[SDN_TX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
-            p[SDN_TX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_tx_packets(port_number) - (
+            t1_sdn = p[_SDN_TX_PACKETS_BUFFER_INDEX]
+            p[_SDN_TX_PACKETS_BUFFER_INDEX] = (p[_SDN_TX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
+            p[_SDN_TX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_tx_packets(port_number) - (
                 self.__seconds_from_start * config.LLDP_NOISE_PACK_S)
