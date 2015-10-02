@@ -356,7 +356,7 @@ class SwitchStats:
             return 1
         return 0
 
-    def update_sdn_stats(self):
+    def _update_sdn_stats(self):
         """
         Update SDN stats for every port registered in this SwitchStats
 
@@ -382,3 +382,12 @@ class SwitchStats:
             p[_SDN_TX_PACKETS_BUFFER_INDEX] = (p[_SDN_TX_PACKETS_BUFFER_INDEX] + 1) % config.DELTA_WINDOW
             p[_SDN_TX_PACKETS_BUFFER][t1_sdn] = self.__get_sdn_tx_packets(port_number) - (
                 self.__seconds_from_start * config.LLDP_NOISE_PACK_S)
+
+    def get_current_values(self, port_number):
+        self._update_sdn_stats()
+        return {RX_BYTES: self.get_rx_bytes(port_number), TX_BYTES: self.get_tx_bytes(port_number),
+                RX_PACKETS: self.get_rx_packets(port_number), TX_PACKETS: self.get_tx_packets(port_number),
+                SDN_RX_BYTES: self.get_sdn_rx_bytes(port_number),
+                SDN_TX_BYTES: self.get_sdn_tx_bytes(port_number),
+                SDN_RX_PACKETS: self.get_sdn_rx_packets(port_number),
+                SDN_TX_PACKETS: self.get_sdn_tx_bytes(port_number)}
