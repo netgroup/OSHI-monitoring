@@ -100,6 +100,7 @@ class SimpleMonitor(app_manager.RyuApp):
         """ :type : SwitchStats """
         for p in sorted(ev.msg.body, key=attrgetter('port_no')):
             if int(p.port_no) > 1000:
+                log.debug("Skipping port. Port number: %s", str(p.port_no))
                 continue
             ss.add_port(p.port_no)
             ss.set_port_name(p.port_no, p.name)
