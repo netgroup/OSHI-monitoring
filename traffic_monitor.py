@@ -122,7 +122,7 @@ class SimpleMonitor(app_manager.RyuApp):
             try:
                 in_port = flow_stat.match.fields[0].value
                 out_port = flow_stat.instructions[0].actions[0].port
-                out_port_name = ss.getPortName(out_port)
+                out_port_name = ss.get_port_name(out_port)
                 if len(re.findall(r"vi+[0-9]", out_port_name, flags=0)) == 1:
                     ss.set_ip_partner_port_number(in_port, out_port)
                     ss.set_ip_partner_port_number(out_port, in_port)
