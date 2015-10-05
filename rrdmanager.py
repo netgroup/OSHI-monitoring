@@ -75,6 +75,9 @@ class RRDManager(object):
         :type data_source_definitions: list
 
         """
+        self.filename = join(config.RRD_STORE_PATH, self._build_rrd_file_name(device_name, port_number))
+        log.debug("Built new RRD file name: %s", self.filename)
+
         # build RRD data sources
         data_sources = []
 
@@ -93,10 +96,6 @@ class RRDManager(object):
             log.debug("Build RRD data source. Name: %s, type: %s, heartbeat: %s. Result: %s", data_source_name,
                       data_source_type, data_source_heartbeat, data_source_definition)
         log.debug("Prepared RRD initialization. Data sources: %s", data_sources)
-
-        self.filename = join(config.RRD_STORE_PATH, self._build_rrd_file_name(device_name, port_number))
-        log.debug("Built new RRD file name: %s", self.filename)
-
         if len(data_sources) > 0:
             # noinspection PyArgumentList
             rrdtool.create(self.filename,
