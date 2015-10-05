@@ -122,7 +122,7 @@ class RRDManager(object):
                 data_source_names.append(rrd_data_source.name)
                 data_source_values.append(rrd_data_source.temp_value)
 
-            template = ':'.join(self.data_source_names)
+            template = ':'.join(data_source_names)
             values = ':'.join(str(value) for value in data_source_values)
             log.debug("Update %s . Template: %s . Values: %s", self.filename, template, values)
             # noinspection PyArgumentList
