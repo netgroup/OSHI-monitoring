@@ -30,6 +30,7 @@ fh.setFormatter(formatter)
 # add the handlers to logger
 log.addHandler(ch)
 log.addHandler(fh)
+log.propagate = False
 
 
 class SimpleMonitor(app_manager.RyuApp):
@@ -49,7 +50,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 open_flow_protocol = data_path.ofproto
                 parser = data_path.ofproto_parser
                 req = parser.OFPPortStatsRequest(data_path, 0, open_flow_protocol.OFPP_ANY)
-                log.debug("Sending PORT stats request: %s", str(req))
+                log.debug("Sending PORT stats request for data_path: %s", str(data_path))
                 data_path.send_msg(req)
             hub.sleep(config.REQUEST_INTERVAL)
 
@@ -117,17 +118,28 @@ class SimpleMonitor(app_manager.RyuApp):
         log.debug("FLOW stats received from %s", ev.msg.datapath.id)
         ss = self.switch_stats[ev.msg.datapath.id]
         body = ev.msg.body
+        log.debug("Setting IP partners info for datapath %s", ev.msg.datapath.id)
         for flow_stat in body:
-            log.debug("Setting IP partners info for %s", ev.msg.datapath.id)
+            log.debug("Getting port info from flow stat: %s", str(flow_stat))
             try:
                 in_port = flow_stat.match.fields[0].value
+                log.debug("Got IN port: %s", str(in_port))
+                if long(in_port) > 1000:
+                    log.debug("Skipping flow_stat. IN port: %s", str(in_port))
+                    continue
                 out_port = flow_stat.instructions[0].actions[0].port
+                if long(out_port) > 1000:
+                    log.debug("Skipping flow_stat. OUT port: %s", str(out_port))
+                    continue
+                log.debug("Got OUT port: %s", str(out_port))
                 out_port_name = ss.get_port_name(out_port)
                 if len(re.findall(r"vi+[0-9]", out_port_name, flags=0)) == 1:
+                    log.debug("Setting IN/OUT ports for datapath %s, IN port: %s, OUT port: %s", ev.msg.datapath.id,
+                              in_port, out_port)
                     ss.set_ip_partner_port_number(in_port, out_port)
                     ss.set_ip_partner_port_number(out_port, in_port)
-            except Exception as e:
-                log.error("Error while handling stat reply: %s", str(e))
+            except Exception:
+                log.exception("Error while handling stat reply.")
                 continue
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
@@ -141,6 +153,7 @@ class SimpleMonitor(app_manager.RyuApp):
         for port in sorted(body, key=attrgetter('port_no')):
             log.info("Updating stats for datapath %s, port %s", data_path_id, port.port_no)
             if int(port.port_no) > 1000:
+                log.debug("Skipping port. Port number: %s", str(port.port_no))
                 continue
             ss.set_rx_bytes(port.port_no, port.rx_bytes)
             ss.set_tx_bytes(port.port_no, port.tx_bytes)
@@ -161,7 +174,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 # use RRDDataSource object as DTO, so we need only data source name and data source current value
                 rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
             log.debug("Completed RRD data sources initialization: %s", str(rrd_data_sources_to_update))
-            log.debug("Building RRD manager for %s datapath and %port", data_path_id, port_number)
+            log.debug("Building RRD manager for %s datapath and %s", data_path_id, port_number)
             if data_path_id in self.rrd_managers and port_number in self.rrd_managers[data_path_id]:
                 log.debug("Updating RRD for data_path %s and port_number %s.", data_path_id, port_number)
                 rrd_manager = self.rrd_managers[data_path_id][port_number]
