@@ -77,7 +77,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 log.info("De-register %s datapath", datapath.id)
                 del self.switch_stats[datapath.id]
             if datapath.id in self.rrd_managers:
-                log.info("De-register RRD managers for %s datapath", datapath.id)
+                log.info("De-registering RRD managers for %s datapath", datapath.id)
                 del self.rrd_managers[datapath.id]
 
     @staticmethod
@@ -104,11 +104,11 @@ class SimpleMonitor(app_manager.RyuApp):
                 continue
             ss.add_port(p.port_no)
             ss.set_port_name(p.port_no, p.name)
-            log.info("Added port (%s, %s) to %s ", p.port_no, p.name, ev.msg.datapath.id)
+            log.info("Added port (%s, %s) to %s", p.port_no, p.name, ev.msg.datapath.id)
             port_stats_names = switch_stats.PORT_STATS
             """ :type : list """
             rrd_data_sources = self._init_rrd_data_sources(p.port_no, port_stats_names)
-            log.debug("Created RRD data sources for %s: %s", data_path_id, str(rrd_data_sources))
+            log.debug("Initialized RRD data sources for %s: %s", data_path_id, str(rrd_data_sources))
             log.info("Creating RRD Manager for port %s of %s", p.port_no, data_path_id)
             self.rrd_managers[data_path_id][p.port_no] = RRDManager(data_path_id, p.port_no, rrd_data_sources)
 
@@ -162,6 +162,11 @@ class SimpleMonitor(app_manager.RyuApp):
                 rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
             log.debug("Completed RRD data sources initialization: %s", str(rrd_data_sources_to_update))
             log.debug("Building RRD manager for %s datapath and %port", data_path_id, port_number)
-            rrd_manager = self.rrd_managers[data_path_id][port_number]
-            """ :type : RRDManager """
-            rrd_manager.update(rrd_data_sources_to_update)
+            if data_path_id in self.rrd_managers and port_number in self.rrd_managers[data_path_id]:
+                log.debug("Updating RRD for data_path %s and port_number %s.", data_path_id, port_number)
+                rrd_manager = self.rrd_managers[data_path_id][port_number]
+                """ :type : RRDManager """
+                rrd_manager.update(rrd_data_sources_to_update)
+            else:
+                log.debug("Cannot find RRD manager for data_path %s and port_number %s. Available managers: %s",
+                          data_path_id, port_number, str(self.rrd_managers))
