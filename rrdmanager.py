@@ -21,6 +21,7 @@ fh.setFormatter(formatter)
 # add the handlers to logger
 log.addHandler(ch)
 log.addHandler(fh)
+log.propagate = False
 
 
 class RRDManager(object):
