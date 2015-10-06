@@ -126,8 +126,11 @@ class RRDManager(object):
             template = ':'.join(data_source_names)
             values = ':'.join(str(value) for value in data_source_values)
             log.debug("Update %s . Template: %s . Values: %s", self.filename, template, values)
-            # noinspection PyArgumentList
-            rrdtool.update(self.filename, '-t', template, str(self._get_current_time_in_seconds()) + ':' + values)
-            log.debug("%s Updated", self.filename)
+            try:
+                # noinspection PyArgumentList
+                rrdtool.update(self.filename, '-t', template, str(self._get_current_time_in_seconds()) + ':' + values)
+                log.debug("%s Updated", self.filename)
+            except rrdtool.OperationalError:
+                log.exception("Error while updating RRD.")
         else:
             log.info("No update is necessary as no data sources are defined.")
