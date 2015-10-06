@@ -79,6 +79,9 @@ class RRDManager(object):
         self.filename = join(config.RRD_STORE_PATH, self._build_rrd_file_name(device_name, port_number))
         log.debug("Built new RRD file name: %s", self.filename)
 
+        self.last_update_time = 0
+        """ :type : int """
+
         # build RRD data sources
         data_sources = []
 
@@ -116,6 +119,14 @@ class RRDManager(object):
 
     def update(self, rrd_data_sources):
         if len(rrd_data_sources) > 0:
+
+            update_time = self._get_current_time_in_seconds()
+
+            # check if the step is more than 1 second (minimum)
+            if update_time - self.last_update_time < 1:
+                log.info("Skipping update as it occurred less than a second after the last update.")
+                return
+
             data_source_names = []
             data_source_values = []
 
@@ -125,10 +136,10 @@ class RRDManager(object):
 
             template = ':'.join(data_source_names)
             values = ':'.join(str(value) for value in data_source_values)
-            log.debug("Update %s . Template: %s . Values: %s", self.filename, template, values)
+            log.debug("Updating %s RRD. Template: %s . Values: %s", self.filename, template, values)
             try:
                 # noinspection PyArgumentList
-                rrdtool.update(self.filename, '-t', template, str(self._get_current_time_in_seconds()) + ':' + values)
+                rrdtool.update(self.filename, '-t', template, str(update_time) + ':' + values)
                 log.debug("%s Updated", self.filename)
             except rrdtool.OperationalError:
                 log.exception("Error while updating RRD.")
