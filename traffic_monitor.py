@@ -50,7 +50,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 open_flow_protocol = data_path.ofproto
                 parser = data_path.ofproto_parser
                 req = parser.OFPPortStatsRequest(data_path, 0, open_flow_protocol.OFPP_ANY)
-                log.debug("Sending PORT stats request for data_path: %s", str(data_path))
+                log.debug("Sending PORT stats request for data_path: %s", data_path.id)
                 data_path.send_msg(req)
             hub.sleep(config.REQUEST_INTERVAL)
 
@@ -169,8 +169,9 @@ class SimpleMonitor(app_manager.RyuApp):
             current_stats = ss.get_current_values(port_number)
             log.debug("Current stats for port %s: %s", port_number, str(current_stats))
             rrd_data_sources_to_update = []
+            log.debug("Building RRD data source for port %s and stats: %s", port_number, str(current_stats))
             for stat_name in current_stats:
-                log.debug("Building RRD data source for %s port and stats: %s", port_number, str(current_stats))
+                log.debug("Building RRD data source for %s stat", stat_name)
                 # use RRDDataSource object as DTO, so we need only data source name and data source current value
                 rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
             log.debug("Completed RRD data sources initialization: %s", str(rrd_data_sources_to_update))
