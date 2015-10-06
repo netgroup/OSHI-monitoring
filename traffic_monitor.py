@@ -1,306 +1,186 @@
+from collections import defaultdict
+import os
+import re
 from operator import attrgetter
 
-from ryu.app import simple_switch_13
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 from ryu.base import app_manager
+import config
+from rrd_data_source import RRDDataSource
 from rrdmanager import RRDManager
-import os.path
-import json
-import time
+from switch_stats import SwitchStats
+import logging
+import switch_stats
 
-# Stats request time interval.
-REQUEST_INTERVAL = 10
-#EthType used to collect flow stats, only flows of this eth type will be considerd.
-FLOW_ETH_TYPE = "0x0800"
+log = logging.getLogger('oshi.monitoring.traffic_monitor')
+log.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler(os.path.join(config.TRAFFIC_MONITOR_LOG_PATH, "traffic_monitor.log"))
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+log.addHandler(ch)
+log.addHandler(fh)
+log.propagate = False
 
 
 class SimpleMonitor(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleMonitor, self).__init__(*args, **kwargs)
-        #list of devices to monitor
-        self.datapaths = {}
-        #monitor thread, peridically issues stats requests
+        self.switch_stats = {}
+        # two dimension dict
+        self.rrd_managers = defaultdict(defaultdict)
         self.monitor_thread = hub.spawn(self._monitor)
-        #list of dicts indexed by device, each dict indexed by port number contains the port name
-        self.namePnumber = {}
-        #list of rrd database managers, one for each device. Each manager handles an rrd file and tracks all PORT tx stats for that device.
-        self.rrdManagerstx = {}
-        #list of rrd database managers, one for each device. Each manager handles an rrd file and tracks all PORT rx stats for that device.
-        self.rrdManagersrx = {}
-        #list of rrd database managers, one for each device. Each manager handles an rrd file and tracks all FLOW tx stats for that device.
-        self.flowrrdManagerstx = {}
-        #list of rrd database managers, one for each device. Each manager handles an rrd file and tracks all FLOW rx stats for that device.
-        self.flowrrdManagersrx = {}
 
-    #monitor thread, issues stats requests every REQUEST_INTERVAL period.
     def _monitor(self):
+        log.info("Started monitor thread.")
         while True:
-            print
-            "sending stats request"
-            #for each known device
-            for dp in self.datapaths.values():
-                self._request_stats(dp)
-            hub.sleep(REQUEST_INTERVAL)
+            log.debug("Sending PORT stats requests")
+            for switch_stat in self.switch_stats.values():
+                data_path = switch_stat.data_path
+                open_flow_protocol = data_path.ofproto
+                parser = data_path.ofproto_parser
+                req = parser.OFPPortStatsRequest(data_path, 0, open_flow_protocol.OFPP_ANY)
+                log.debug("Sending PORT stats request for data_path: %s", data_path.id)
+                data_path.send_msg(req)
+            hub.sleep(config.REQUEST_INTERVAL)
 
-    def _request_stats(self, datapath):
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
-        cookie = cookie_mask = 0
-        #Flow stats request, no math parameter is provided meaning all flows are retrieved.
-        req = parser.OFPFlowStatsRequest(datapath, 0,
-                                         ofproto.OFPTT_ALL,
-                                         ofproto.OFPP_ANY, ofproto.OFPG_ANY, cookie, cookie_mask)
-        datapath.send_msg(req)
-        #Port stats request, requests all stats for the ports of the provided device
-        req = parser.OFPPortStatsRequest(datapath, 0, ofproto.OFPP_ANY)
-        datapath.send_msg(req)
-
-    #This function traslates port numbers in port names.
-    def getPname(self, datapathid, PNumber):
-        try:
-            return (self.namePnumber[datapathid])[PNumber]
-        except:
-            return "Null"
-
-    #handler for SwitchDiscovery/SwitchDeath events.
     @set_ev_cls(ofp_event.EventOFPStateChange, [MAIN_DISPATCHER, DEAD_DISPATCHER])
     def _state_change_handler(self, ev):
         datapath = ev.datapath
         ofp_parser = datapath.ofproto_parser
         if ev.state == MAIN_DISPATCHER:
-            if not datapath.id in self.datapaths:
-                self.logger.warning('register datapath: %016x', datapath.id)
-                #Every time a switch discovery event is received the new switch is added to the list of know switches which will be monitored.
-                self.datapaths[datapath.id] = datapath
-                #For every new switch a port descriptor request is issued, this request is necessary to retrieve the PortName/PortNumber association
+            if datapath.id not in self.switch_stats:
+                log.info("Received MAIN_DISPATCHER event. Register datapath: %s", datapath.id)
+                self.switch_stats[datapath.id] = SwitchStats(datapath)
                 req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
                 datapath.send_msg(req)
-        #Every time a switch dies
+                open_flow_protocol = datapath.ofproto
+                parser = datapath.ofproto_parser
+                cookie = cookie_mask = 0
+                req = parser.OFPFlowStatsRequest(datapath, 0,
+                                                 open_flow_protocol.OFPTT_ALL,
+                                                 open_flow_protocol.OFPP_ANY, open_flow_protocol.OFPG_ANY, cookie,
+                                                 cookie_mask)
+                datapath.send_msg(req)
         elif ev.state == DEAD_DISPATCHER:
-            if datapath.id in self.datapaths:
-                self.logger.warning('unregister datapath: %016x', datapath.id)
-                #The switch is deleted from the list of known devices
-                del self.datapaths[datapath.id]
-                #All managers are removed
-                del self.rrdManagerstx[datapath.id]
-                del self.rrdManagersrx[datapath.id]
-                del self.flowrrdManagerstx[datapath.id]
-                del self.flowrrdManagersrx[datapath.id]
-                #Port Name / Port Number associations are removed
-                del self.namePnumber[datapath.id]
+            log.info("Received DEAD_DISPATCHER event.")
+            if datapath.id in self.switch_stats:
+                log.info("De-register %s datapath", datapath.id)
+                del self.switch_stats[datapath.id]
+            if datapath.id in self.rrd_managers:
+                log.info("De-registering RRD managers for %s datapath", datapath.id)
+                del self.rrd_managers[datapath.id]
 
-    #Port Descriptor event, used to enstablish port name / port number association.
+    @staticmethod
+    def _init_rrd_data_sources(port_number, port_stat_names, data_source_values=None):
+        rrd_data_sources = []
+        for port_stat_name in port_stat_names:
+            log.debug("Building RRD data source for port %s. Stat: %s", port_number, port_stat_name)
+            rrd_data_source = RRDDataSource(port_stat_name, config.RRD_DATA_SOURCE_TYPE,
+                                            config.RRD_DATA_SOURCE_HEARTBEAT)
+            # add an eventual value to the data source. Useful for rrd updates
+            if data_source_values is not None and port_stat_name in data_source_values:
+                rrd_data_source.temp_value = data_source_values[port_stat_name]
+            rrd_data_sources.append(rrd_data_source)
+        return rrd_data_sources
+
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
-        ports = {}
-        for p in ev.msg.body:
-            #Received association is added to the list
-            ports[p.port_no] = p.name
-        self.namePnumber[ev.msg.datapath.id] = ports
+        data_path_id = ev.msg.datapath.id
+        ss = self.switch_stats[data_path_id]
+        """ :type : SwitchStats """
+        for p in sorted(ev.msg.body, key=attrgetter('port_no')):
+            if int(p.port_no) > 1000:
+                log.debug("Skipping port. Port number: %s", str(p.port_no))
+                continue
+            ss.add_port(p.port_no)
+            ss.set_port_name(p.port_no, p.name)
+            log.info("Added port (%s, %s) to %s", p.port_no, p.name, ev.msg.datapath.id)
+            port_stats_names = switch_stats.PORT_STATS
+            """ :type : list """
+            rrd_data_sources = self._init_rrd_data_sources(p.port_no, port_stats_names)
+            log.debug("Initialized RRD data sources for %s: %s", data_path_id, str(rrd_data_sources))
+            log.info("Creating RRD Manager for port %s of %s", p.port_no, data_path_id)
+            self.rrd_managers[data_path_id][p.port_no] = RRDManager(data_path_id, p.port_no, rrd_data_sources)
 
-
-    #Flow stats reception event.
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
+        log.debug("FLOW stats received from %s", ev.msg.datapath.id)
+        ss = self.switch_stats[ev.msg.datapath.id]
         body = ev.msg.body
-        #list of datasources in the rrd rx file for the switch associated with the reply, each datasource corresponding to a port.
-        rxdatasources = []
-        #list of datasources in the rrd tx file for the switch associated with the reply, each datasource corresponding to a port.
-        txdatasources = []
-        #list of rx data for each datasource, association of datasources and corresponding data is mantained by keeping the same order of elements.
-        rxdata = []
-        #list of tx data for each datasource, association of datasources and corresponding data is mantained by keeping the same order of elements.
-        txdata = []
-
-        for stat in body:
-            datapathidstr = str(ev.msg.datapath.id)
-
-            #dict indexed by datapathidstr cotaining port names for the switch this is necessary for the construction of the rrd database.
-            #datapathidstr is necessary since a single file supports multiple switches however this is not adviced
-            #since the update of stats for switches in the same file would require 1 second sleep time (rrd constraint)
-            device = {}
-
-            #If the switch is sending a flow reply for the first time
-            if not (datapathidstr in self.flowrrdManagersrx.keys()):
-                #for the switch associated with the reply a list of port names is constructed and added to device dict under key datapathidstr
-                device[datapathidstr] = []
-                for i in self.namePnumber[ev.msg.datapath.id].keys():
-                    device[datapathidstr].append(self.getPname(ev.msg.datapath.id, i))
-
-                #If the switch is repling for the first time its manager for rx flows is constructed. File name is as follows: flow[SwitchId]rx.rrd
-                print
-                "creating managers for flow received data " + "file: " + datapathidstr + "rx"
-                rrdman = RRDManager("flow" + datapathidstr + "rx.rrd", device, [FLOW_ETH_TYPE])
-                self.flowrrdManagersrx[datapathidstr] = rrdman
-
-                #If the switch is repling for the first time its manager for tx flows is constructed. File name is as follows: flow[SwitchId]tx.rrd
-                print
-                "creating managers for flow transmitted data " + "file: " + datapathidstr + "tx"
-                rrdman = RRDManager("flow" + datapathidstr + "tx.rrd", device, [FLOW_ETH_TYPE])
-                self.flowrrdManagerstx[datapathidstr] = rrdman
-                #Created manager may not be used instantly
-                time.sleep(1)
-            #Manager for the rx flow associated with the switch is retrieved
-            rrdmanagerrx = self.flowrrdManagersrx[datapathidstr]
-            #Manager for the tx flow associated with the switch is retrieved
-            rrdmanagertx = self.flowrrdManagerstx[datapathidstr]
-
-
-            #If the match for the replied switch contains input EthType and InPort then those two information are collected
-            InEthType = 0
-            InPortNumber = 0
-            for OXMTlv in stat.match.fields:
-                if type(OXMTlv).__name__ == 'MTEthType':
-                    InEthType = OXMTlv.value
-                if type(OXMTlv).__name__ == 'MTInPort':
-                    InPortNumber = OXMTlv.value
-
-            #Port name is retrieved from port number
-            inPortName = self.getPname(ev.msg.datapath.id, InPortNumber)
-
-            #Output EthType is initialized the same as InEthType in case no OF action will change it later.
-            OutEthType = InEthType
-
-            for OFPInstructionActions in stat.instructions:
-                #discard all GotoTable instructions
-                if type(OFPInstructionActions).__name__ == "OFPInstructionGotoTable":
+        log.debug("Setting IP partners info for datapath %s", ev.msg.datapath.id)
+        for flow_stat in body:
+            log.debug("Getting port info from flow stat: %s", str(flow_stat))
+            try:
+                in_port = flow_stat.match.fields[0].value
+                log.debug("Got IN port: %s", str(in_port))
+                if long(in_port) > 1000:
+                    log.debug("Skipping flow_stat. IN port: %s", str(in_port))
                     continue
-
-                #Push or Pop Mpls actions are searched in the action list to determine the eventually modified EthType of the out packet.
-                for action in OFPInstructionActions.actions:
-                    if type(action).__name__ == "OFPActionPushMpls" or type(action).__name__ == "OFPActionPopMpls":
-                        OutEthType = action.ethertype
-
-                for action in OFPInstructionActions.actions:
-                    #This ignores all the actions which are not OutputActions, a flow is defined by inport and outport.
-                    #For a certain inPort all the OutPort (each one defined in a ActionOutput) define a new flow.
-                    if type(action).__name__ != "OFPActionOutput":
-                        continue
-                    #In a ActionOutput the type field is the EthType, in case this is 0 the the original input EthType is kept.
-                    if action.type != 0: OutEthType = action.type
-                    #The output port is retrieved.
-                    outPortNumber = action.port
-                    outPortName = self.getPname(ev.msg.datapath.id, outPortNumber)
-                    #If InPort or OutPort are not defined at this point the flow is ignored (which means aggregated flow).
-                    if InPortNumber == 0 or outPortNumber == 0: continue
-                    #If the OutEthType is  FLOW_ETH_TYPE the flow is considered as output flow, the datasource for outPortName is added to txdatasources.
-                    #The corresponding data entry is added to txdata.
-                    if OutEthType == int(FLOW_ETH_TYPE, 16):
-                        txdata.append(stat.packet_count)
-                        txdatasources.append(
-                            rrdmanagerrx.constructDataSource(datapathidstr, outPortName, FLOW_ETH_TYPE))
-                    #If the InEthType is  FLOW_ETH_TYPE the flow is considered as input flow, the datasource for inPortName is added to rxdatasources.
-                    #The corresponding data entry is added to rxdata.
-                    if InEthType == int(FLOW_ETH_TYPE, 16):
-                        rxdata.append(stat.packet_count)
-                        rxdatasources.append(rrdmanagertx.constructDataSource(datapathidstr, inPortName, FLOW_ETH_TYPE))
-        #insert operation are performed.
-        if rxdatasources:
-            print
-            "updating rx flow for " + datapathidstr + " port: " + str(rxdatasources) + " data: " + str(
-                rxdata) + " file: " + rrdmanagerrx.filename
-            print
-            "\n"
-            try:
-                rrdmanagerrx.update(rxdatasources, rxdata)
-            except:
-                time.sleep(1)
-                rrdmanagerrx.update(rxdatasources, rxdata)
-
-        if txdatasources:
-            print
-            "updating tx flow for " + datapathidstr + " port: " + str(txdatasources) + " data: " + str(
-                txdata) + " file: " + rrdmanagertx.filename
-            print
-            "\n"
-            try:
-                rrdmanagertx.update(txdatasources, txdata)
-            except:
-                time.sleep(1)
-                rrdmanagertx.update(txdatasources, txdata)
-
+                out_port = flow_stat.instructions[0].actions[0].port
+                if long(out_port) > 1000:
+                    log.debug("Skipping flow_stat. OUT port: %s", str(out_port))
+                    continue
+                log.debug("Got OUT port: %s", str(out_port))
+                out_port_name = ss.get_port_name(out_port)
+                if len(re.findall(r"vi+[0-9]", out_port_name, flags=0)) == 1:
+                    log.debug("Setting IN/OUT ports for datapath %s, IN port: %s, OUT port: %s", ev.msg.datapath.id,
+                              in_port, out_port)
+                    ss.set_ip_partner_port_number(in_port, out_port)
+                    ss.set_ip_partner_port_number(out_port, in_port)
+            except Exception:
+                log.exception("Error while handling stat reply.")
+                continue
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
-
+        data_path_id = ev.msg.datapath.id
+        log.info("Received reply for datapath %s", data_path_id)
+        ss = self.switch_stats[data_path_id]
+        """ :type : SwitchStats """
         body = ev.msg.body
-        #list of datasources in the rrd rx file for the switch associated with the reply, each datasource corresponding to a port.
-        rxdatasources = []
-        #list of datasources in the rrd tx file for the switch associated with the reply, each datasource corresponding to a port.
-        txdatasources = []
-        #list of rx data for each datasource, association of datasources and corresponding data is mantained by keeping the same order of elements.
-        rxdata = []
-        #list of tx data for each datasource, association of datasources and corresponding data is mantained by keeping the same order of elements.
-        txdata = []
+        log.info("Updating stats for datapath %s", data_path_id)
+        for port in sorted(body, key=attrgetter('port_no')):
+            log.info("Updating stats for datapath %s, port %s", data_path_id, port.port_no)
+            if int(port.port_no) > 1000:
+                log.debug("Skipping port. Port number: %s", str(port.port_no))
+                continue
+            ss.set_rx_bytes(port.port_no, port.rx_bytes)
+            ss.set_tx_bytes(port.port_no, port.tx_bytes)
+            ss.set_rx_packets(port.port_no, port.rx_packets)
+            ss.set_tx_packets(port.port_no, port.tx_packets)
 
-        datapathidstr = str(ev.msg.datapath.id)
-        for stat in sorted(body, key=attrgetter('port_no')):
+        port_numbers = ss.ports.keys()
+        log.debug("Ports to update: %s", str(port_numbers))
 
-            portName = self.getPname(ev.msg.datapath.id, stat.port_no)
-
-            #dict indexed by datapathidstr cotaining port names for the switch this is necessary for the construction of the rrd database.
-            #datapathidstr is necessary since a single file supports multiple switches however this is not adviced
-            #since the update of stats for switches in the same file would require 1 second sleep time (rrd constraint)
-            device = {}
-
-            #If the switch is sending a port reply for the first time
-            if not (datapathidstr in self.rrdManagersrx.keys()):
-                #for the switch associated with the reply a list of port names is constructed and added to device dict under key datapathidstr
-                device[datapathidstr] = []
-                for i in self.namePnumber[ev.msg.datapath.id].keys():
-                    device[datapathidstr].append(self.getPname(ev.msg.datapath.id, i))
-
-                #If the switch is repling for the first time its manager for rx ports is constructed. File name is as follows: [SwitchId]rx.rrd
-                print
-                "creating managers for agggregate received data " + "file: " + datapathidstr + "rx"
-                rrdman = RRDManager(datapathidstr + "rx.rrd", device, ["0000"])
-                self.rrdManagersrx[datapathidstr] = rrdman
-
-                #If the switch is repling for the first time its manager for rx ports is constructed. File name is as follows: [SwitchId]rx.rrd
-                print
-                "creating managers for agggregate transmitted data " + "file: " + datapathidstr + "tx"
-                rrdman = RRDManager(datapathidstr + "tx.rrd", device, ["0000"])
-                self.rrdManagerstx[datapathidstr] = rrdman
-                time.sleep(1)
-
-            #rx and tx manager are retrieved for the following insertion operation
-            rrdmanagerrx = self.rrdManagersrx[datapathidstr]
-            rrdmanagertx = self.rrdManagerstx[datapathidstr]
-
-            #portName is appendend to the list of datasources with new data for received packets.
-            rxdatasources.append(rrdmanagerrx.constructDataSource(datapathidstr, portName, "0000"))
-            #the data corresponding to portName is appended to rxdata (hence maintaining the same order).
-            rxdata.append(stat.rx_packets);
-
-            #portName is appendend to the list of datasources with new data for transmitted packets reported by datapathidstr switch.
-            txdatasources.append(rrdmanagertx.constructDataSource(datapathidstr, portName, "0000"))
-            #the data corresponding to portName is appended to txdata (hence maintaining the same order)
-            txdata.append(stat.tx_packets);
-
-        #the data is finally inserted in the database
-        print
-        "updating tx data for " + datapathidstr + " ds: " + str(txdatasources) + " data: " + str(
-            txdata) + " file: " + rrdmanagertx.filename
-        print
-        "\n"
-        try:
-            rrdmanagertx.update(txdatasources, txdata)
-        except:
-            time.sleep(1)
-            rrdmanagertx.update(txdatasources, txdata)
-            pass
-
-        print
-        "updating rx data for " + datapathidstr + " ds: " + str(rxdatasources) + " data: " + str(
-            rxdata) + " file: " + rrdmanagerrx.filename
-        print
-        "\n"
-        try:
-            rrdmanagerrx.update(rxdatasources, rxdata)
-        except:
-            time.sleep(1)
-            rrdmanagerrx.update(rxdatasources, rxdata)
-            pass
+        # update RRD
+        for port_number in port_numbers:
+            log.debug("Updating port %s", port_number)
+            current_stats = ss.get_current_values(port_number)
+            log.debug("Current stats for port %s: %s", port_number, str(current_stats))
+            rrd_data_sources_to_update = []
+            log.debug("Building RRD data source for port %s and stats: %s", port_number, str(current_stats))
+            for stat_name in current_stats:
+                log.debug("Building RRD data source for %s stat", stat_name)
+                # use RRDDataSource object as DTO, so we need only data source name and data source current value
+                rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
+            log.debug("Completed RRD data sources initialization: %s", str(rrd_data_sources_to_update))
+            log.debug("Building RRD manager for %s datapath and %s", data_path_id, port_number)
+            if data_path_id in self.rrd_managers and port_number in self.rrd_managers[data_path_id]:
+                log.debug("Updating RRD for data_path %s and port_number %s.", data_path_id, port_number)
+                rrd_manager = self.rrd_managers[data_path_id][port_number]
+                """ :type : RRDManager """
+                rrd_manager.update(rrd_data_sources_to_update)
+            else:
+                log.debug("Cannot find RRD manager for data_path %s and port_number %s. Available managers: %s",
+                          data_path_id, port_number, str(self.rrd_managers))

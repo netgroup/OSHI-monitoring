@@ -1,4 +1,4 @@
-# TPIN: Project (2015)
+# OSHI-Monitoring
 ## Setup instructions
 
 1. Download the VirtualBox VM from [Uniroma2 Netgroup](http://netgroup.uniroma2.it/twiki/bin/view/Oshi/WebHome#AnchorSoftDown)
@@ -6,36 +6,30 @@
     ```
     cd /home/user/workspace
     
-    git clone https://github.com/ferrarimarco/tpin-2015-project.git
+    git clone https://github.com/ferrarimarco/OSHI-monitoring.git
     ```
 3. Setup the environment:
     ```
-    cd /home/user/workspace/tpin-2015-project
+    cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./tpin-2015-project.sh --setup
+    sudo ./OSHI-monitoring.sh --setup
     ```
-4. Setup the ryu application:
+4. Run mininet:
     ```
-    cd /home/user/workspace/tpin-2015-project
+    cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./tpin-2015-project.sh --setup
+    sudo ./OSHI-monitoring.sh --run-mininet
     ```
-5. Run mininet:
-    ```
-    cd /home/user/workspace/tpin-2015-project
-    
-    sudo ./tpin-2015-project.sh --run-mininet
-    ```
-6. xterm to a controller (from the mininet console). For example we choose ctr8:
+5. xterm to a controller (from the mininet console). For example we choose ctr8:
     ```
     xterm ctr8
     ```
     *ctr8 is one of the controllers described in the topology*
-7. Run RYU (from the controller):
+6. Run RYU (from the controller):
     ```
-    cd /home/user/workspace/tpin-2015-project
+    cd /home/user/workspace/monitoring
     
-    sudo ./tpin-2015-project.sh --run-ryu
+    sudo ./OSHI-monitoring.sh --run-ryu
     ```
     
 ## Test REST interface
