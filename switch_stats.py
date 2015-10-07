@@ -188,12 +188,12 @@ class SwitchStats:
         time_interval_end = port[buffer_index_key]
         time_interval_start = (time_interval_end - 1) % config.DELTA_WINDOW
 
-        # byte count recorded @ time_interval_start
-        time_interval_start_rx = port[buffer_key][time_interval_start]
+        # stat count recorded @ time_interval_start
+        time_interval_start_count = port[buffer_key][time_interval_start]
 
-        # update rx_bytes if necessary (time_interval_start_rx == 0 if the buffer is partially empty)
-        if time_interval_start_rx != 0:
-            self.ports[port_number][stat_key] += stat_value - time_interval_start_rx - lldp_noise
+        # update stat if necessary (time_interval_start_count == 0 if the buffer is partially empty)
+        if time_interval_start_count != 0:
+            self.ports[port_number][stat_key] += stat_value - time_interval_start_count - lldp_noise
 
         # update time interval start
         port[buffer_index_key] = (port[buffer_index_key] + 1) % config.DELTA_WINDOW
