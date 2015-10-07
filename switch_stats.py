@@ -1,3 +1,5 @@
+import logging
+import os
 import config
 
 _RX_BYTES_BUFFER = 'rx_bytes_buffer'
@@ -34,12 +36,30 @@ PORT_STATS = {RX_BYTES, TX_BYTES,
 IP_PARTNER_PORT_NUMBER = 'ip_partner_port_number'
 PORT_NAME = 'name'
 
+log = logging.getLogger('oshi.monitoring.switch_stat')
+log.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "switch_stat.log"))
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+ch.setFormatter(formatter)
+fh.setFormatter(formatter)
+# add the handlers to logger
+log.addHandler(ch)
+log.addHandler(fh)
+log.propagate = False
+
 
 class SwitchStats:
     def __init__(self, datapath):
         self.data_path = datapath
         self.ports = {}
         self.__seconds_from_start = 0
+        log.debug("Initializing SwitchStat for %s datapath", datapath.id)
 
     def add_port(self, port_number):
         """
@@ -183,23 +203,39 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
+        log.debug("Update %s stat for %s datapath, %s port", stat_key, self.data_path.id, port_number)
         port = self.ports[port_number]
+        log.debug("Current stats for %s port: %s", port_number, str(port))
         # Time interval definition
         time_interval_end = port[buffer_index_key]
         time_interval_start = (time_interval_end - 1) % config.DELTA_WINDOW
-
+        log.debug("Time interval start for %s port: %s", port_number, time_interval_start)
+        log.debug("Time interval end for %s port: %s", port_number, time_interval_end)
         # stat count recorded @ time_interval_start
         time_interval_start_count = port[buffer_key][time_interval_start]
+        log.debug("%s (buffer_key: %s) count @ time_interval_start for %s port: %s", stat_key, buffer_key, port_number,
+                  time_interval_start_count)
 
         # update stat if necessary (time_interval_start_count == 0 if the buffer is partially empty)
         if time_interval_start_count != 0:
-            self.ports[port_number][stat_key] += stat_value - time_interval_start_count - lldp_noise
+            updated_value = stat_value - time_interval_start_count - lldp_noise
+            log.debug("Updating %s for port %s with value: %s", stat_key, port_number, updated_value)
+            self.ports[port_number][stat_key] += updated_value
+        else:
+            log.debug("%s not yet necessary for %s port as the buffer is not yet full", stat_key, port_number)
+        log.debug("Current stats for %s port: %s", port_number, str(port))
 
         # update time interval start
-        port[buffer_index_key] = (port[buffer_index_key] + 1) % config.DELTA_WINDOW
+        time_interval_start_updated_value = (port[buffer_index_key] + 1) % config.DELTA_WINDOW
+        log.debug("Update time_interval_start for %s buffer, %s port with value: %s", buffer_index_key, port_number,
+                  time_interval_start_updated_value)
+        port[buffer_index_key] = time_interval_start_updated_value
 
         # update byte count received @ time_interval_end
         port[buffer_key][time_interval_end] = stat_value
+        log.debug("Update time_interval_end for %s buffer, %s port with value: %s", buffer_key, port_number,
+                  stat_value)
+        log.debug("Current stats for %s port after all the updates: %s", port_number, str(port))
 
     def set_rx_bytes(self, port_number, rx_bytes, lldp_noise=0):
         """
