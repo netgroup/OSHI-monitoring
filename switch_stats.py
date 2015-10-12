@@ -98,15 +98,6 @@ class SwitchStats:
         """
         del self.ports[port_number]
 
-    def get_port(self, port_number):
-        """
-        Return the specified port.
-
-        :param port_number:
-        :return: the specified port
-        """
-        return self.ports[port_number]
-
     def set_port_name(self, port_number, port_name):
         """
         Set name for the specified port.
