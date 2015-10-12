@@ -90,14 +90,6 @@ class SwitchStats:
         self.ports[port_number][_SDN_TX_PACKETS_BUFFER] = [0] * config.DELTA_WINDOW
         self.ports[port_number][_SDN_TX_PACKETS_BUFFER_INDEX] = 0
 
-    def delete_port(self, port_number):
-        """
-        Remove specified port from stats.
-
-        :param port_number: port number of the port to remove
-        """
-        del self.ports[port_number]
-
     def set_port_name(self, port_number, port_name):
         """
         Set name for the specified port.
