@@ -125,14 +125,6 @@ class SwitchStats:
         """
         return self.ports[port_number][PORT_NAME]
 
-    def get_datapath(self):
-        """
-        Return the datapath of the SwitchStats object.
-
-        :return: datapath
-        """
-        return self.data_path
-
     def set_ip_partner_port_number(self, port_number, partner_port_number):
         """
         Set the port number of the IP partner for a given port.
