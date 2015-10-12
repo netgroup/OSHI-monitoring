@@ -61,7 +61,7 @@ class SimpleMonitor(app_manager.RyuApp):
         if ev.state == MAIN_DISPATCHER:
             if datapath.id not in self.switch_stats:
                 log.info("Received MAIN_DISPATCHER event. Register datapath: %s", datapath.id)
-                self.switch_stats[datapath.id] = SwitchStats(datapath)
+                self.switch_stats[datapath.id] = SwitchStats(datapath.id)
                 req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
                 datapath.send_msg(req)
                 open_flow_protocol = datapath.ofproto

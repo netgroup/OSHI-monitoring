@@ -55,11 +55,11 @@ log.propagate = False
 
 
 class SwitchStats:
-    def __init__(self, datapath):
-        self.data_path = datapath
+    def __init__(self, datapath_id):
+        self.data_path_id = datapath_id
         self.ports = {}
         self.__seconds_from_start = 0
-        log.debug("Initializing SwitchStat for %s datapath", datapath.id)
+        log.debug("Initializing SwitchStat for %s datapath", datapath_id)
 
     def add_port(self, port_number):
         """
@@ -195,7 +195,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        log.debug("Update %s stat for %s datapath, port %s with value: %s", stat_key, self.data_path.id, port_number,
+        log.debug("Update %s stat for %s datapath, port %s with value: %s", stat_key, self.data_path_id, port_number,
                   stat_value)
         port = self.ports[port_number]
         log.debug("Current stats for port %s: %s", port_number, str(port))
