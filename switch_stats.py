@@ -38,11 +38,12 @@ log.propagate = False
 
 
 class SwitchStats:
-    def __init__(self, datapath_id):
-        self.data_path_id = datapath_id
+    def __init__(self, datapath):
+        log.debug("Initializing SwitchStat for %s datapath", datapath.id)
+        self.data_path = datapath
+        self.data_path_id = datapath.id
         self.ports = {}
         self.__seconds_from_start = 0
-        log.debug("Initializing SwitchStat for %s datapath", datapath_id)
 
     def add_port(self, port_number):
         """
