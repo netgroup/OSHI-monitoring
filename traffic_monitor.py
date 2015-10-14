@@ -167,7 +167,8 @@ class SimpleMonitor(app_manager.RyuApp):
         for port_number in port_numbers:
             log.debug("Updating port %s", port_number)
             current_stats = ss.get_current_values(port_number)
-            log.debug("Current stats for port %s: %s", port_number, str(current_stats))
+            log.debug("Current stats for port %s (%s): %s", port_number, ss.get_port_name(port_number),
+                      str(current_stats))
             rrd_data_sources_to_update = []
             log.debug("Building RRD data source for port %s and stats: %s", port_number, str(current_stats))
             for stat_name in current_stats:
