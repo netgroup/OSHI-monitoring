@@ -76,6 +76,7 @@ class SwitchStats:
 
         :param port_number:
         :return: port name
+        :rtype: str
         """
         return self.ports[port_number][PORT_NAME]
 
@@ -258,8 +259,19 @@ class SwitchStats:
 
     def __compute_sdn_stat(self, port_number, grand_total_stat, stat_to_subtract):
         try:
-            ip_partner_port_number = self.get_ip_partner_port_number(port_number)
-            return self.ports[port_number][grand_total_stat] - self.ports[ip_partner_port_number][stat_to_subtract]
+            # compute SDN stats for PHY ports only, not for virtual
+            port_name = self.get_port_name(port_number)
+            if port_name.lower().startswith('vi'):
+                return 0
+            else:
+                ip_partner_port_number = self.get_ip_partner_port_number(port_number)
+                res = self.ports[port_number][grand_total_stat] - self.ports[ip_partner_port_number][stat_to_subtract]
+                log.debug("Computing SDN stat for port %s (%s): %s (%s:%s:%s) - %s (%s:%s:%s) = %s",
+                          port_number, port_name,
+                          self.ports[port_number][grand_total_stat], port_number, port_name, grand_total_stat,
+                          self.ports[ip_partner_port_number][stat_to_subtract], port_number, port_name,
+                          stat_to_subtract, res)
+                return res
         except KeyError:
             return 0
 
