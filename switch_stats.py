@@ -90,6 +90,8 @@ class SwitchStats:
         :param port_number:
         :param partner_port_number:
         """
+        log.debug("Setting partner port number for port %s (%s). Partner: %s (%s)", port_number,
+                  self.get_port_name(port_number), partner_port_number, self.get_port_name(partner_port_number))
         self.ports[port_number][IP_PARTNER_PORT_NUMBER] = partner_port_number
 
     def get_ip_partner_port_number(self, port_number):
