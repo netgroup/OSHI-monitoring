@@ -290,21 +290,32 @@ class SwitchStats:
         :return:
         """
         self.__seconds_from_start += 1
+        log.debug("Updating SDN stats for all ports of %s datapath. Seconds from start: %s", self.data_path_id,
+                  self.__seconds_from_start)
         for port_number in self.ports:
+            port_name = self.get_port_name(port_number)
+            log.debug("Updating SDN stats for port %s (%s)", port_number, port_name)
             port = self.ports[port_number]
-            rx_noise = SwitchStats._has_rx_lldp_noise(self.get_port_name(port_number), port_number)
-            sdn_rx_bytes = self.__compute_sdn_rx_bytes(port_number)
-            port[SDN_RX_BYTES] = 0 if sdn_rx_bytes == 0 else sdn_rx_bytes + (self.__seconds_from_start *
-                                                                             config.LLDP_NOISE_BYTE_S * rx_noise)
-            sdn_tx_bytes = self.__compute_sdn_tx_bytes(port_number)
-            port[SDN_TX_BYTES] = 0 if sdn_tx_bytes == 0 else sdn_tx_bytes - (self.__seconds_from_start *
-                                                                             config.LLDP_NOISE_BYTE_S)
-            sdn_rx_packets = self.__compute_sdn_rx_packets(port_number)
-            port[SDN_RX_PACKETS] = 0 if sdn_rx_packets == 0 else sdn_rx_packets + (self.__seconds_from_start *
-                                                                                   config.LLDP_NOISE_PACK_S * rx_noise)
-            sdn_tx_packets = self.__compute_sdn_tx_packets(port_number)
-            port[SDN_TX_PACKETS] = 0 if sdn_tx_packets == 0 else sdn_tx_packets - (self.__seconds_from_start *
-                                                                                   config.LLDP_NOISE_PACK_S)
+            log.debug("Current stats for port %s (%s): %s", port_number, port_name, str(port))
+            if port_name.lower().startswith('vi'):
+                log.debug("Skip SDN stats update for port %s (%s) because it's a virtual port", port_number, port_name)
+            else:
+                # initialization
+                rx_noise = SwitchStats._has_rx_lldp_noise(self.get_port_name(port_number), port_number)
+                lldp_noise_bytes = self.__seconds_from_start * config.LLDP_NOISE_BYTE_S
+                lldp_noise_packets = self.__seconds_from_start * config.LLDP_NOISE_PACK_S
+                log.debug("LLDP Noise for port %s (%s). LLDP Noise BYTES: %s, Packets: %s. RX_NOISE: %s", port_number,
+                          port_name, lldp_noise_bytes, lldp_noise_packets, rx_noise)
+                # update SDN stats
+                sdn_rx_bytes = self.__compute_sdn_rx_bytes(port_number)
+                port[SDN_RX_BYTES] = sdn_rx_bytes + lldp_noise_bytes * rx_noise
+                sdn_tx_bytes = self.__compute_sdn_tx_bytes(port_number)
+                port[SDN_TX_BYTES] = sdn_tx_bytes - lldp_noise_bytes
+                sdn_rx_packets = self.__compute_sdn_rx_packets(port_number)
+                port[SDN_RX_PACKETS] = sdn_rx_packets + lldp_noise_packets * rx_noise
+                sdn_tx_packets = self.__compute_sdn_tx_packets(port_number)
+                port[SDN_TX_PACKETS] = sdn_tx_packets - lldp_noise_packets
+                log.debug("Updated stats for port %s (%s): %s", port_number, port_name, str(port))
 
     def get_current_values(self, port_number):
         self._update_sdn_stats()
