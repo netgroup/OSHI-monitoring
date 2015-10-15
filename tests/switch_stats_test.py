@@ -2,18 +2,22 @@ import config
 from switch_stats import SwitchStats
 
 
+class _TestDataPath(object):
+    def __init__(self, id):
+        self.id = id
+
 class TestSwitchStats(object):
     def test_switch_stats_init(self):
         print("Testing SwitchStats initialization")
-        test_datapath_id = 'datapath-id'
-        switch_stat = SwitchStats(test_datapath_id)
-        assert switch_stat.data_path_id == test_datapath_id
+        test_datapath = _TestDataPath('datapath-id')
+        switch_stat = SwitchStats(test_datapath)
+        assert switch_stat.data_path_id == test_datapath.id
         # check if ports is empty
         assert not switch_stat.ports
 
     def test_add_port(self):
         print("Testing SwitchStats add port")
-        switch_stat = SwitchStats('datapath-id')
+        switch_stat = SwitchStats(_TestDataPath('datapath-id'))
         port_number = 10
         port_name = 'cro'
         switch_stat.add_port(port_number)
@@ -30,8 +34,8 @@ class TestSwitchStats(object):
         assert switch_stat.get_sdn_tx_packets(port_number) == 0
 
     def test_update_rx_bytes(self):
-        print("Testing SwitchStats add port")
-        switch_stat = SwitchStats('datapath-id')
+        print("Testing SwitchStats Update RX bytes")
+        switch_stat = SwitchStats(_TestDataPath('datapath-id'))
         port_number = '10'
         switch_stat.add_port(port_number)
         rx_bytes_value_init = 100
