@@ -20,6 +20,8 @@ log.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
 fh = logging.FileHandler(os.path.join(config.TRAFFIC_MONITOR_LOG_PATH, "traffic_monitor.log"))
 fh.setLevel(logging.DEBUG)
+fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "complete.log"))
+fh_complete.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -27,9 +29,11 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
 fh.setFormatter(formatter)
+fh_complete.setFormatter(formatter)
 # add the handlers to logger
 log.addHandler(ch)
 log.addHandler(fh)
+log.addHandler(fh_complete)
 log.propagate = False
 
 

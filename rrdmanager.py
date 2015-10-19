@@ -11,6 +11,8 @@ log.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
 fh = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "rrdmanager.log"))
 fh.setLevel(logging.DEBUG)
+fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "complete.log"))
+fh_complete.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -18,9 +20,11 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
 fh.setFormatter(formatter)
+fh_complete.setFormatter(formatter)
 # add the handlers to logger
 log.addHandler(ch)
 log.addHandler(fh)
+log.addHandler(fh_complete)
 log.propagate = False
 
 
@@ -97,7 +101,7 @@ class RRDManager(object):
             data_source_definition = self._build_rrd_data_source(data_source_name, data_source_type,
                                                                  data_source_heartbeat)
             data_sources.append(data_source_definition)
-            log.debug("Build RRD data source. Name: %s, type: %s, heartbeat: %s. Result: %s", data_source_name,
+            log.debug("Built RRD data source. Name: %s, type: %s, heartbeat: %s. Result: %s", data_source_name,
                       data_source_type, data_source_heartbeat, data_source_definition)
         log.debug("Prepared RRD initialization. Data sources: %s", data_sources)
         if len(data_sources) > 0:

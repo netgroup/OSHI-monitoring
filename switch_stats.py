@@ -24,6 +24,8 @@ log.setLevel(logging.DEBUG)
 # create file handler which logs even debug messages
 fh = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "switch_stat.log"))
 fh.setLevel(logging.DEBUG)
+fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "complete.log"))
+fh_complete.setLevel(logging.DEBUG)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -31,9 +33,11 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
 fh.setFormatter(formatter)
+fh_complete.setFormatter(formatter)
 # add the handlers to logger
 log.addHandler(ch)
 log.addHandler(fh)
+log.addHandler(fh_complete)
 log.propagate = False
 
 
@@ -153,7 +157,6 @@ class SwitchStats:
         return self._get_sdn_stat(port_number, SDN_TX_PACKETS)
 
     def _get_sdn_stat(self, port_number, stat_key):
-        self._update_sdn_stats()
         return self.ports[port_number][stat_key]
 
     def _update_stat(self, port_number, stat_key, stat_value, lldp_noise=0):
@@ -307,14 +310,10 @@ class SwitchStats:
                 log.debug("LLDP Noise for port %s (%s). LLDP Noise BYTES: %s, Packets: %s. RX_NOISE: %s", port_number,
                           port_name, lldp_noise_bytes, lldp_noise_packets, rx_noise)
                 # update SDN stats
-                sdn_rx_bytes = self.__compute_sdn_rx_bytes(port_number)
-                port[SDN_RX_BYTES] = sdn_rx_bytes + lldp_noise_bytes * rx_noise
-                sdn_tx_bytes = self.__compute_sdn_tx_bytes(port_number)
-                port[SDN_TX_BYTES] = sdn_tx_bytes - lldp_noise_bytes
-                sdn_rx_packets = self.__compute_sdn_rx_packets(port_number)
-                port[SDN_RX_PACKETS] = sdn_rx_packets + lldp_noise_packets * rx_noise
-                sdn_tx_packets = self.__compute_sdn_tx_packets(port_number)
-                port[SDN_TX_PACKETS] = sdn_tx_packets - lldp_noise_packets
+                port[SDN_RX_BYTES] = self.__compute_sdn_rx_bytes(port_number) + lldp_noise_bytes * rx_noise
+                port[SDN_TX_BYTES] = self.__compute_sdn_tx_bytes(port_number) - lldp_noise_bytes
+                port[SDN_RX_PACKETS] = self.__compute_sdn_rx_packets(port_number) + lldp_noise_packets * rx_noise
+                port[SDN_TX_PACKETS] = self.__compute_sdn_tx_packets(port_number) - lldp_noise_packets
                 log.debug("Updated stats for port %s (%s): %s", port_number, port_name, str(port))
 
     def get_current_values(self, port_number):
