@@ -50,17 +50,6 @@ class RRDManager(object):
         return int(math.floor(time.time()))
 
     # noinspection PyMethodMayBeStatic
-    def _build_rrd_file_name(self, device_name, port_number):
-        """
-        Build RRD file name composing device_name and port_number.
-
-        :param device_name:
-        :param port_number:
-        :return:
-        """
-        return str(str(device_name) + "_" + str(port_number) + ".rrd")
-
-    # noinspection PyMethodMayBeStatic
     def _build_rrd_data_source(self, data_source_name, data_source_type, heartbeat):
         """
 
@@ -68,19 +57,18 @@ class RRDManager(object):
         """
         return 'DS:' + data_source_name + ':' + data_source_type + ':' + heartbeat + ':U:U'
 
-    def __init__(self, device_name, port_number, data_source_definitions):
+    def __init__(self, rrd_file_name, data_source_definitions):
         """
         Build a new RRD manager for the specified device:port.
 
-        :param device_name:
-        :param port_number:
+        :param rrd_file_name: RRD file name
         :param data_source_definitions: list of RRDDataSource
         :return:
 
         :type data_source_definitions: list
 
         """
-        self.filename = join(config.RRD_STORE_PATH, self._build_rrd_file_name(device_name, port_number))
+        self.filename = join(config.RRD_STORE_PATH, rrd_file_name)
         log.debug("Built new RRD file name: %s", self.filename)
 
         self.last_update_time = 0

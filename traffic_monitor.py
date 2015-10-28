@@ -41,8 +41,7 @@ class SimpleMonitor(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(SimpleMonitor, self).__init__(*args, **kwargs)
         self.switch_stats = {}
-        # two dimension dict
-        self.rrd_managers = defaultdict(defaultdict)
+        self.rrd_managers = defaultdict()
         self.monitor_thread = hub.spawn(self._monitor)
 
     def _monitor(self):
@@ -81,9 +80,6 @@ class SimpleMonitor(app_manager.RyuApp):
             if datapath.id in self.switch_stats:
                 log.info("De-register %s datapath", datapath.id)
                 del self.switch_stats[datapath.id]
-            if datapath.id in self.rrd_managers:
-                log.info("De-registering RRD managers for %s datapath", datapath.id)
-                del self.rrd_managers[datapath.id]
 
     @staticmethod
     def _init_rrd_data_sources(port_number, port_stat_names, data_source_values=None):
@@ -100,6 +96,8 @@ class SimpleMonitor(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, MAIN_DISPATCHER)
     def port_desc_stats_reply_handler(self, ev):
+        log.debug("Received event (EventOFPPortDescStatsReply). Body: %s", str(ev.msg.body))
+        log.debug("PORT stats received from %s", ev.msg.datapath.id)
         data_path_id = ev.msg.datapath.id
         ss = self.switch_stats[data_path_id]
         """ :type : SwitchStats """
@@ -115,10 +113,11 @@ class SimpleMonitor(app_manager.RyuApp):
             rrd_data_sources = self._init_rrd_data_sources(p.port_no, port_stats_names)
             log.debug("Initialized RRD data sources for %s: %s", data_path_id, str(rrd_data_sources))
             log.info("Creating RRD Manager for port %s of %s", p.port_no, data_path_id)
-            self.rrd_managers[data_path_id][p.port_no] = RRDManager(data_path_id, p.port_no, rrd_data_sources)
+            self.rrd_managers[p.name] = RRDManager(p.name + '.rrd', rrd_data_sources)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
+        log.debug("Received event (EventOFPFlowStatsReply). Body: %s", str(ev.msg.body))
         log.debug("FLOW stats received from %s", ev.msg.datapath.id)
         ss = self.switch_stats[ev.msg.datapath.id]
         body = ev.msg.body
@@ -149,16 +148,17 @@ class SimpleMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         data_path_id = ev.msg.datapath.id
-        log.info("Received reply for datapath %s", data_path_id)
+        log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(ev.msg.body))
+        log.info("PORT STATS reply for datapath %s", data_path_id)
         ss = self.switch_stats[data_path_id]
         """ :type : SwitchStats """
         body = ev.msg.body
         log.info("Updating stats for datapath %s", data_path_id)
         for port in sorted(body, key=attrgetter('port_no')):
-            log.info("Updating stats for datapath %s, port %s", data_path_id, port.port_no)
             if int(port.port_no) > 1000:
                 log.debug("Skipping port. Port number: %s", str(port.port_no))
                 continue
+            log.info("Updating stats for datapath %s, port %s", data_path_id, ss.get_port_name(port.port_no))
             ss.set_rx_bytes(port.port_no, port.rx_bytes)
             ss.set_tx_bytes(port.port_no, port.tx_bytes)
             ss.set_rx_packets(port.port_no, port.rx_packets)
@@ -169,23 +169,23 @@ class SimpleMonitor(app_manager.RyuApp):
 
         # update RRD
         for port_number in port_numbers:
-            log.debug("Updating port %s", port_number)
+            log.debug("Updating port %s (%s)", port_number, ss.get_port_name(port_number))
             current_stats = ss.get_current_values(port_number)
             log.debug("Current stats for port %s (%s): %s", port_number, ss.get_port_name(port_number),
                       str(current_stats))
             rrd_data_sources_to_update = []
-            log.debug("Building RRD data source for port %s and stats: %s", port_number, str(current_stats))
+            log.debug("Building RRD data source for port %s (%s) and stats: %s", port_number,
+                      ss.get_port_name(port_number), str(current_stats))
             for stat_name in current_stats:
                 log.debug("Building RRD data source for %s stat", stat_name)
                 # use RRDDataSource object as DTO, so we need only data source name and data source current value
                 rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
             log.debug("Completed RRD data sources initialization: %s", str(rrd_data_sources_to_update))
-            log.debug("Building RRD manager for %s datapath and %s", data_path_id, port_number)
-            if data_path_id in self.rrd_managers and port_number in self.rrd_managers[data_path_id]:
+            if ss.get_port_name(port_number) in self.rrd_managers:
                 log.debug("Updating RRD for data_path %s and port_number %s.", data_path_id, port_number)
-                rrd_manager = self.rrd_managers[data_path_id][port_number]
+                rrd_manager = self.rrd_managers[ss.get_port_name(port_number)]
                 """ :type : RRDManager """
                 rrd_manager.update(rrd_data_sources_to_update)
             else:
-                log.debug("Cannot find RRD manager for data_path %s and port_number %s. Available managers: %s",
-                          data_path_id, port_number, str(self.rrd_managers))
+                log.debug("Cannot find RRD manager for %s. Available managers: %s", ss.get_port_name(port_number),
+                          str(self.rrd_managers))
