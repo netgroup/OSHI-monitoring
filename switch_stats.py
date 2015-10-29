@@ -46,6 +46,7 @@ class SwitchStats:
         log.debug("Initializing SwitchStat for %s datapath", datapath.id)
         self.data_path = datapath
         self.data_path_id = datapath.id
+        self.device_name = ''
         self.ports = {}
         self.__seconds_from_start = 0
 

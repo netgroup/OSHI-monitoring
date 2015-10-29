@@ -108,13 +108,15 @@ class SimpleMonitor(app_manager.RyuApp):
                 break
         log.debug("Device name for %s: %s", str(data_path_id), device_name)
 
+        ss = self.switch_stats[data_path_id]
+        """ :type : SwitchStats """
+        ss.device_name = device_name
         for p in sorted(ev.msg.body, key=attrgetter('port_no')):
             if int(p.port_no) > 1000:
                 log.debug("Skipping port. Port number: %s", str(p.port_no))
                 continue
             port_name = p.name if 'vi' not in p.name else (device_name + '-' + p.name)
-            ss = self.switch_stats[data_path_id]
-            """ :type : SwitchStats """
+
             ss.add_port(p.port_no)
             ss.set_port_name(p.port_no, port_name)
             log.info("Added port %s to %s", port_name, device_name)
