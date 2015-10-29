@@ -82,10 +82,10 @@ class SimpleMonitor(app_manager.RyuApp):
                 del self.switch_stats[datapath.id]
 
     @staticmethod
-    def _init_rrd_data_sources(port_number, port_stat_names, data_source_values=None):
+    def _init_rrd_data_sources(port_stat_names, data_source_values=None):
         rrd_data_sources = []
         for port_stat_name in port_stat_names:
-            log.debug("Building RRD data source for port %s. Stat: %s", port_number, port_stat_name)
+            log.debug("Building RRD data source for stat: %s", port_stat_name)
             rrd_data_source = RRDDataSource(port_stat_name, config.RRD_DATA_SOURCE_TYPE,
                                             config.RRD_DATA_SOURCE_HEARTBEAT)
             # add an eventual value to the data source. Useful for rrd updates
@@ -111,13 +111,14 @@ class SimpleMonitor(app_manager.RyuApp):
             if p.name not in self.rrd_managers:
                 port_stats_names = switch_stats.PORT_STATS
                 """ :type : list """
-                rrd_data_sources = self._init_rrd_data_sources(p.port_no, port_stats_names)
-                log.debug("Initialized RRD data sources for %s: %s", data_path_id)
+                log.debug("Initializing RRD data sources for %s", data_path_id)
+                rrd_data_sources = self._init_rrd_data_sources(port_stats_names)
+                log.debug("Initialized RRD data sources for %s", data_path_id)
                 log.info("Creating RRD Manager for port %s of %s", p.port_no, data_path_id)
                 self.rrd_managers[p.name] = RRDManager(p.name + '.rrd', rrd_data_sources)
             else:
                 log.debug("Skip RRD Manager creation for port %s of %s as it's already available",
-                         p.port_no, data_path_id)
+                          p.port_no, data_path_id)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
