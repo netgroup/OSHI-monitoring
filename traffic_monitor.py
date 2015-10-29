@@ -108,12 +108,16 @@ class SimpleMonitor(app_manager.RyuApp):
             ss.add_port(p.port_no)
             ss.set_port_name(p.port_no, p.name)
             log.info("Added port (%s, %s) to %s", p.port_no, p.name, ev.msg.datapath.id)
-            port_stats_names = switch_stats.PORT_STATS
-            """ :type : list """
-            rrd_data_sources = self._init_rrd_data_sources(p.port_no, port_stats_names)
-            log.debug("Initialized RRD data sources for %s: %s", data_path_id, str(rrd_data_sources))
-            log.info("Creating RRD Manager for port %s of %s", p.port_no, data_path_id)
-            self.rrd_managers[p.name] = RRDManager(p.name + '.rrd', rrd_data_sources)
+            if p.name not in self.rrd_managers:
+                port_stats_names = switch_stats.PORT_STATS
+                """ :type : list """
+                rrd_data_sources = self._init_rrd_data_sources(p.port_no, port_stats_names)
+                log.debug("Initialized RRD data sources for %s: %s", data_path_id)
+                log.info("Creating RRD Manager for port %s of %s", p.port_no, data_path_id)
+                self.rrd_managers[p.name] = RRDManager(p.name + '.rrd', rrd_data_sources)
+            else:
+                log.debug("Skip RRD Manager creation for port %s of %s as it's already available",
+                         p.port_no, data_path_id)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
