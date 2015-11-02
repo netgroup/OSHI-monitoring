@@ -10,6 +10,8 @@ SDN_RX_BYTES = 'sdn_rx_bytes'
 SDN_TX_BYTES = 'sdn_tx_bytes'
 SDN_RX_PACKETS = 'sdn_rx_packets'
 SDN_TX_PACKETS = 'sdn_tx_packets'
+IS_VIRTUAL = 'is_virtual'
+PORT_NAME = 'name'
 
 PORT_STATS = {RX_BYTES, TX_BYTES,
               RX_PACKETS, TX_PACKETS,
@@ -17,7 +19,6 @@ PORT_STATS = {RX_BYTES, TX_BYTES,
               SDN_RX_PACKETS, SDN_TX_PACKETS}
 
 IP_PARTNER_PORT_NUMBER = 'ip_partner_port_number'
-PORT_NAME = 'name'
 
 log = logging.getLogger('oshi.monitoring.switch_stat')
 log.setLevel(logging.DEBUG)
@@ -50,7 +51,7 @@ class SwitchStats:
         self.ports = {}
         self.__seconds_from_start = 0
 
-    def add_port(self, port_number):
+    def add_port(self, port_number, is_virtual=False, port_name=''):
         """
         Add a single port to stats.
 
@@ -65,14 +66,7 @@ class SwitchStats:
         self.ports[port_number][SDN_TX_BYTES] = 0
         self.ports[port_number][SDN_RX_PACKETS] = 0
         self.ports[port_number][SDN_TX_PACKETS] = 0
-
-    def set_port_name(self, port_number, port_name):
-        """
-        Set name for the specified port.
-
-        :param port_number
-        :param port_name: name to set
-        """
+        self.ports[port_number][IS_VIRTUAL] = is_virtual
         self.ports[port_number][PORT_NAME] = port_name
 
     def get_port_name(self, port_number):
@@ -301,7 +295,7 @@ class SwitchStats:
             log.debug("Updating SDN stats for port %s (%s)", port_number, port_name)
             port = self.ports[port_number]
             log.debug("Current stats for port %s (%s): %s", port_number, port_name, str(port))
-            if port_name.lower().startswith('vi'):
+            if self.ports[port_number][IS_VIRTUAL]:
                 log.debug("Skip SDN stats update for port %s (%s) because it's a virtual port", port_number, port_name)
             else:
                 # initialization

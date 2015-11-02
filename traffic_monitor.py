@@ -115,11 +115,10 @@ class SimpleMonitor(app_manager.RyuApp):
             if int(p.port_no) > 1000:
                 log.debug("Skipping port. Port number: %s", str(p.port_no))
                 continue
-            port_name = p.name if 'vi' not in p.name else (device_name + '-' + p.name)
-
-            ss.add_port(p.port_no)
-            ss.set_port_name(p.port_no, port_name)
-            log.info("Added port %s to %s", port_name, device_name)
+            virtual = 'vi' in p.name
+            port_name = (device_name + '-' + p.name) if virtual else p.name
+            log.debug("Initializing port %s (%s). Virtual: %s", port_name, p.port_no, virtual)
+            ss.add_port(p.port_no, virtual, port_name)
             if port_name not in self.rrd_managers:
                 log.debug("Initializing RRD data sources for %s", port_name)
                 port_stats_names = switch_stats.PORT_STATS
@@ -131,6 +130,7 @@ class SimpleMonitor(app_manager.RyuApp):
             else:
                 log.debug("Skip RRD Manager creation for port %s of %s as it's already available",
                           port_name, data_path_id)
+            log.debug("Completed port %s (%s) initialization", port_name, p.port_no)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
