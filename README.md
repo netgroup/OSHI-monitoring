@@ -2,41 +2,36 @@
 ## Setup instructions
 
 1. Download the VirtualBox VM from [Uniroma2 Netgroup](http://netgroup.uniroma2.it/twiki/bin/view/Oshi/WebHome#AnchorSoftDown)
-2. After starting the VM, run the following command as user `user` (**only if it's the first time you run this software**):
+2. After starting the VM, run the following command as user `user`:
     ```
     cd /home/user/workspace
     
-    git clone https://github.com/ferrarimarco/OSHI-monitoring.git
+    git clone https://github.com/netgroup/OSHI-monitoring.git
     ```
 3. Setup the environment:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-monitoring.sh --setup
+    sudo ./OSHI-monitoring.sh --mode setup
     ```
-4. Run mininet:
+
+## Run instructions
+
+1. Run mininet:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-monitoring.sh --run-mininet
+    sudo ./OSHI-monitoring.sh -mode runmininet -t /path/to/topology.json
     ```
-5. xterm to a controller (from the mininet console). For example we choose ctr8:
+2. xterm to a controller (from the mininet console), i.e. ctr8:
     ```
     xterm ctr8
     ```
-    *ctr8 is one of the controllers described in the topology*
-6. Run RYU (from the controller):
+    
+    *Note that the controller must be defined in the topology*
+3. Run RYU (from the controller):
     ```
     cd /home/user/workspace/monitoring
     
-    sudo ./OSHI-monitoring.sh --run-ryu
+    sudo ./OSHI-monitoring.sh --mode runryu
     ```
-    
-## Test REST interface
-You can call each REST endpoint implemented in ofctl_rest.py. The server runs on port 8080.
-
-### Example
-```
-curl http://10.0.4.1:8080/stats/switches
-```
-*Note that ryu-manager must be running on the machine you want to query. 10.0.4.1 (ctr8) in this case.*
