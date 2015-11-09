@@ -41,20 +41,20 @@ fi
 if [[ ${MODE} = 'setup' ]]
 	then
 	  echo "Setting up environment..."
-	  #apt-get install rrdtool librrds-perl librrd-dev
-	  #pip install rrdtool
+	  apt-get install rrdtool librrds-perl librrd-dev
+	  pip install rrdtool
 elif [[ ${MODE} = 'runmininet' ]]
 	then
 	  echo "Running mininet with topology ${TOPOLOGY}"
-	  #cd /home/user/workspace/OSHI-monitoring
-	  #cp *.py /home/user/workspace/dreamer-ryu/ryu/app/
-	  #cd /home/user/workspace/dreamer-ryu
-	  #python ./setup.py install
-	  #cd /home/user/workspace/Dreamer-Mininet-Extensions
-	  #./mininet_deployer.py --topology /media/sf_Shared/topologies/simple_topology.json
+	  cd /home/user/workspace/OSHI-monitoring
+	  cp *.py /home/user/workspace/dreamer-ryu/ryu/app/
+	  cd /home/user/workspace/dreamer-ryu
+	  python ./setup.py install
+	  cd /home/user/workspace/Dreamer-Mininet-Extensions
+	  ./mininet_deployer.py --topology /media/sf_Shared/topologies/simple_topology.json
 elif [[ ${MODE} = 'runryu' ]]
 	then
 	  echo "Running RYU..."
-	  #cd /home/user/workspace/OSHI-monitoring
-	  #ryu-manager --observe-links traffic_monitor.py ofctl_rest.py rrdmanager.py
+	  cd /home/user/workspace/OSHI-monitoring
+	  ryu-manager --observe-links traffic_monitor.py ofctl_rest.py rrdmanager.py
 fi
