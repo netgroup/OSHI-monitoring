@@ -1,6 +1,9 @@
 # Log config
+import logging
+
 RRD_LOG_PATH = "/home/user/workspace/OSHI-Monitoring/logs/"
 TRAFFIC_MONITOR_LOG_PATH = "/home/user/workspace/OSHI-Monitoring/logs/"
+LOG_LEVEL = logging.ERROR
 
 # RRD config
 RRD_STEP = "300"

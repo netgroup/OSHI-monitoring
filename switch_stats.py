@@ -21,15 +21,15 @@ PORT_STATS = {RX_BYTES, TX_BYTES,
 IP_PARTNER_PORT_NUMBER = 'ip_partner_port_number'
 
 log = logging.getLogger('oshi.monitoring.switch_stat')
-log.setLevel(logging.DEBUG)
+log.setLevel(config.LOG_LEVEL)
 # create file handler which logs even debug messages
 fh = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "switch_stat.log"))
-fh.setLevel(logging.DEBUG)
+fh.setLevel(config.LOG_LEVEL)
 fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "complete.log"))
-fh_complete.setLevel(logging.DEBUG)
+fh_complete.setLevel(config.LOG_LEVEL)
 # create console handler with a higher log level
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(config.LOG_LEVEL)
 # create formatter and add it to the handlers
 formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 ch.setFormatter(formatter)
