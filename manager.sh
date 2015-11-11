@@ -47,14 +47,14 @@ elif [[ ${MODE} = 'runmininet' ]]
 	then
 	  echo "Running mininet with topology ${TOPOLOGY}"
 	  cd /home/user/workspace/OSHI-monitoring
-	  cp *.py /home/user/workspace/dreamer-ryu/ryu/app/
+	  find . -name \*.cp -exec cp {} /home/user/workspace/dreamer-ryu/ryu/app/ \;
 	  cd /home/user/workspace/dreamer-ryu
 	  python ./setup.py install
 	  cd /home/user/workspace/Dreamer-Mininet-Extensions
-	  ./mininet_deployer.py --topology /media/sf_Shared/topologies/simple_topology.json
+	  ./mininet_deployer.py --topology ${TOPOLOGY}
 elif [[ ${MODE} = 'runryu' ]]
 	then
 	  echo "Running RYU..."
 	  cd /home/user/workspace/OSHI-monitoring
-	  ryu-manager --observe-links traffic_monitor.py ofctl_rest.py rrdmanager.py
+	  ryu-manager --observe-links traffic_monitor.py rrdmanager.py
 fi

@@ -1,7 +1,7 @@
-# OSHI-Monitoring
+# OSHI-monitoring
 ## Setup instructions
 
-You can use the OSHI-Monitoring.sh script to setup and run this project.
+You can use the manager.sh script to setup and run this project.
 
 The available options are:
 - --mode (or -m) to choose the running mode: setup, runmininet or runryu
@@ -18,7 +18,7 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-Monitoring.sh --mode setup
+    sudo ./manager.sh --mode setup
     ```
 
 ## Run instructions
@@ -27,7 +27,7 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-Monitoring.sh --mode runmininet --topology ./example_topologies/simple_topology.json
+    sudo ./manager.sh --mode runmininet --topology ./example_topologies/simple_topology.json
     ```
 2. xterm to a controller (from the mininet console), i.e. ctr8:
     ```
@@ -39,5 +39,5 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-Monitoring.sh --mode runryu
+    sudo ./manager.sh --mode runryu
     ```
