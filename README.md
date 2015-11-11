@@ -18,6 +18,8 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
+    chmod +x manager.sh
+    
     sudo ./manager.sh --mode setup
     ```
 
@@ -27,7 +29,7 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./manager.sh --mode runmininet --topology ./example_topologies/simple_topology.json
+    sudo ./manager.sh --mode runmininet --topology /home/user/workspace/OSHI-monitoring/example_topologies/simple_topology.json
     ```
 2. xterm to a controller (from the mininet console), i.e. ctr8:
     ```
@@ -39,5 +41,5 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./manager.sh --mode runryu
+    ./manager.sh --mode runryu
     ```
