@@ -18,7 +18,7 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-monitoring.sh --mode setup
+    sudo ./OSHI-Monitoring.sh --mode setup
     ```
 
 ## Run instructions
@@ -27,7 +27,7 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-monitoring.sh --mode runmininet --topology ./example_topologies/simple_topology.json
+    sudo ./OSHI-Monitoring.sh --mode runmininet --topology ./example_topologies/simple_topology.json
     ```
 2. xterm to a controller (from the mininet console), i.e. ctr8:
     ```
@@ -37,7 +37,7 @@ The available options are:
     *Note that the controller must be defined in the topology*
 3. Run RYU (from the controller):
     ```
-    cd /home/user/workspace/monitoring
+    cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-monitoring.sh --mode runryu
+    sudo ./OSHI-Monitoring.sh --mode runryu
     ```
