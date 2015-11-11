@@ -23,11 +23,11 @@ The available options are:
 
 ## Run instructions
 
-1. Run mininet:
+1. Run mininet with an included example topology:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    sudo ./OSHI-monitoring.sh --mode runmininet --topology /path/to/topology.json
+    sudo ./OSHI-monitoring.sh --mode runmininet --topology ./example_topologies/simple_topology.json
     ```
 2. xterm to a controller (from the mininet console), i.e. ctr8:
     ```
