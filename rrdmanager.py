@@ -96,7 +96,7 @@ class RRDManager(object):
             # noinspection PyArgumentList
             rrdtool.create(self.filename,
                            '--step',
-                           config.RRD_STEP,
+                           str(config.RRD_STEP),
                            '--start',
                            str(self._get_current_time_in_seconds()),
                            data_sources,
