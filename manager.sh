@@ -57,4 +57,7 @@ elif [[ ${MODE} = 'runryu' ]]
 	  echo "Running RYU..."
 	  cd /home/user/workspace/OSHI-monitoring
 	  ryu-manager --observe-links traffic_monitor.py rrdmanager.py
+else 
+          echo "Unrecognized option. Available options are: setup, runmininet and runryu. This script will now terminate."
+          exit 1
 fi
