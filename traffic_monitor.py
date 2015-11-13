@@ -8,6 +8,7 @@ from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 from ryu.base import app_manager
+import time
 import config
 from rrd_data_source import RRDDataSource
 from rrdmanager import RRDManager
@@ -43,6 +44,7 @@ class SimpleMonitor(app_manager.RyuApp):
         self.switch_stats = {}
         self.rrd_managers = defaultdict()
         self.monitor_thread = hub.spawn(self._monitor)
+        self.last_update_time = time.time()
 
     def _monitor(self):
         log.info("Started monitor thread.")
@@ -184,26 +186,32 @@ class SimpleMonitor(app_manager.RyuApp):
         port_numbers = ss.ports.keys()
         log.debug("Ports to update: %s", str(port_numbers))
 
-        # update RRD
-        for port_number in port_numbers:
-            log.debug("Updating port %s", ss.get_port_name(port_number))
-            current_stats = ss.get_current_values(port_number)
-            log.debug("Current stats for port %s (%s): %s", port_number, ss.get_port_name(port_number),
-                      str(current_stats))
-            rrd_data_sources_to_update = []
-            log.debug("Building RRD data source for port %s and stats: %s", ss.get_port_name(port_number),
-                      str(current_stats))
-            for stat_name in current_stats:
-                log.debug("Building RRD data source to update %s", stat_name)
-                # use RRDDataSource object as DTO, so we need only data source name and data source current value
-                rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
-            log.debug("Completed RRD data sources initialization to update %s: %s", ss.device_name,
-                      str(rrd_data_sources_to_update))
-            if ss.get_port_name(port_number) in self.rrd_managers:
-                log.debug("Updating RRD for %s.", ss.device_name)
-                rrd_manager = self.rrd_managers[ss.get_port_name(port_number)]
-                """ :type : RRDManager """
-                rrd_manager.update(rrd_data_sources_to_update)
-            else:
-                log.debug("Cannot find RRD manager for %s. Available managers: %s", ss.get_port_name(port_number),
-                          str(self.rrd_managers))
+        # update RRD if necessary
+        current_time = time.time()
+        if current_time - self.last_update_time >= config.RRD_STEP:
+            log.debug("Updating RRDs")
+            for port_number in port_numbers:
+                log.debug("Updating port %s", ss.get_port_name(port_number))
+                current_stats = ss.get_current_values(port_number)
+                log.debug("Current stats for port %s (%s): %s", port_number, ss.get_port_name(port_number),
+                          str(current_stats))
+                rrd_data_sources_to_update = []
+                log.debug("Building RRD data source for port %s and stats: %s", ss.get_port_name(port_number),
+                          str(current_stats))
+                for stat_name in current_stats:
+                    log.debug("Building RRD data source to update %s", stat_name)
+                    # use RRDDataSource object as DTO, so we need only data source name and data source current value
+                    rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
+                log.debug("Completed RRD data sources initialization to update %s: %s", ss.device_name,
+                          str(rrd_data_sources_to_update))
+                if ss.get_port_name(port_number) in self.rrd_managers:
+                    log.debug("Updating RRD for %s.", ss.device_name)
+                    rrd_manager = self.rrd_managers[ss.get_port_name(port_number)]
+                    """ :type : RRDManager """
+                    rrd_manager.update(rrd_data_sources_to_update)
+                else:
+                    log.debug("Cannot find RRD manager for %s. Available managers: %s", ss.get_port_name(port_number),
+                              str(self.rrd_managers))
+            self.last_update_time = time.time()
+        else:
+            log.debug("Queueing up RRD update")
