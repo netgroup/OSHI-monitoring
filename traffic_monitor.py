@@ -201,7 +201,7 @@ class SimpleMonitor(app_manager.RyuApp):
                               str(self.rrd_managers))
             self.last_update_time = time.time()
 
-            log.info("Updated %d since last log: %s", len(self.rrd_updates_since_last_log),
+            log.info("Updated %d RRDs since last log: %s", len(self.rrd_updates_since_last_log),
                      self.rrd_updates_since_last_log)
             self.rrd_updates_since_last_log.clear()
             self.last_log_time = current_time
