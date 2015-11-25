@@ -29,7 +29,8 @@ class SimpleMonitor(app_manager.RyuApp):
         self.last_update_time = time.time()
 
     def _monitor(self):
-        log.info("Started monitor thread.")
+        log.info("Started monitoring with REQUEST_INTERVAL %s seconds and RRD_STEP %s seconds", config.REQUEST_INTERVAL,
+                 config.RRD_STEP)
         while True:
             log.debug("Sending PORT stats requests")
             for switch_stat in self.switch_stats.values():
