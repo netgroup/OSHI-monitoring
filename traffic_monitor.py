@@ -205,7 +205,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 log.debug("Completed RRD data sources initialization to update %s: %s", ss.device_name,
                           str(rrd_data_sources_to_update))
                 if ss.get_port_name(port_number) in self.rrd_managers:
-                    log.info("Updating RRD for %s.", ss.device_name)
+                    log.debug("Updating RRD for %s.", ss.device_name)
                     rrd_manager = self.rrd_managers[ss.get_port_name(port_number)]
                     """ :type : RRDManager """
                     rrd_manager.update(rrd_data_sources_to_update)
