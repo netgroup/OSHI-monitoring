@@ -7,7 +7,7 @@ BASE_PATH = "/home/user/workspace/OSHI-monitoring/"
 RRD_LOG_PATH = BASE_PATH + "logs/"
 TRAFFIC_MONITOR_LOG_PATH = BASE_PATH + "logs/"
 LOG_LEVEL = logging.INFO
-ENABLE_FILE_LOGGING = True
+ENABLE_FILE_LOGGING = False
 
 # Traffic monitor config
 REQUEST_INTERVAL = 1
