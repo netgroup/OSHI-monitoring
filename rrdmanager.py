@@ -116,7 +116,7 @@ class RRDManager(object):
 
             # check if the step is more than 1 second (minimum)
             if update_time - self.last_update_time < 1:
-                log.info("Skipping update as it occurred less than a second after the last update.")
+                log.debug("Skipping update as it occurred less than a second after the last update.")
                 return
 
             data_source_names = []
@@ -128,7 +128,7 @@ class RRDManager(object):
 
             template = ':'.join(data_source_names)
             values = ':'.join(str(value) for value in data_source_values)
-            log.debug("Updating %s RRD. Template: %s . Values: %s", self.filename, template, values)
+            log.info("Updating %s RRD. Template: %s . Values: %s", self.filename, template, values)
             try:
                 # noinspection PyArgumentList
                 rrdtool.update(self.filename, '-t', template, str(update_time) + ':' + values)
