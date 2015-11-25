@@ -27,6 +27,8 @@ class SimpleMonitor(app_manager.RyuApp):
         self.rrd_managers = defaultdict()
         self.monitor_thread = hub.spawn(self._monitor)
         self.last_update_time = time.time()
+        self.last_log_time = time.time()
+        self.rrd_updates_since_last_log = set()
 
     def _monitor(self):
         log.info("Started monitoring with REQUEST_INTERVAL %s seconds and RRD_STEP %s seconds", config.REQUEST_INTERVAL,
@@ -172,6 +174,7 @@ class SimpleMonitor(app_manager.RyuApp):
         # update RRD if necessary
         current_time = time.time()
         if current_time - self.last_update_time >= config.RRD_STEP:
+
             log.debug("Updating RRDs")
             for port_number in port_numbers:
                 log.debug("Updating port %s", ss.get_port_name(port_number))
@@ -192,9 +195,15 @@ class SimpleMonitor(app_manager.RyuApp):
                     rrd_manager = self.rrd_managers[ss.get_port_name(port_number)]
                     """ :type : RRDManager """
                     rrd_manager.update(rrd_data_sources_to_update)
+                    self.rrd_updates_since_last_log.add(ss.get_port_name(port_number))
                 else:
                     log.debug("Cannot find RRD manager for %s. Available managers: %s", ss.get_port_name(port_number),
                               str(self.rrd_managers))
             self.last_update_time = time.time()
+
+            log.info("Updated %d since last log: %s", len(self.rrd_updates_since_last_log),
+                     self.rrd_updates_since_last_log)
+            self.rrd_updates_since_last_log.clear()
+            self.last_log_time = current_time
         else:
             log.debug("Queueing up RRD update")
