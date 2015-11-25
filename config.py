@@ -3,9 +3,11 @@ import logging
 
 BASE_PATH = "/home/user/workspace/OSHI-monitoring/"
 
+# Logging configuration
 RRD_LOG_PATH = BASE_PATH + "logs/"
 TRAFFIC_MONITOR_LOG_PATH = BASE_PATH + "logs/"
-LOG_LEVEL = logging.ERROR
+LOG_LEVEL = logging.DEBUG
+ENABLE_FILE_LOGGING = True
 
 # Traffic monitor config
 REQUEST_INTERVAL = 1

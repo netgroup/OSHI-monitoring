@@ -16,22 +16,8 @@ from switch_stats import SwitchStats
 import logging
 import switch_stats
 
-log = logging.getLogger('oshi.monitoring.traffic_monitor')
-log.setLevel(config.LOG_LEVEL)
-# create file handler which logs even debug messages
-fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "complete.log"))
-fh_complete.setLevel(config.LOG_LEVEL)
-# create console handler with a higher log level
-ch = logging.StreamHandler()
-ch.setLevel(config.LOG_LEVEL)
-# create formatter and add it to the handlers
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-ch.setFormatter(formatter)
-fh_complete.setFormatter(formatter)
-# add the handlers to logger
-log.addHandler(ch)
-log.addHandler(fh_complete)
-log.propagate = False
+
+log = logging.getLogger('oshi_monitoring')
 
 
 class SimpleMonitor(app_manager.RyuApp):
@@ -61,7 +47,7 @@ class SimpleMonitor(app_manager.RyuApp):
         ofp_parser = datapath.ofproto_parser
         if ev.state == MAIN_DISPATCHER:
             if datapath.id not in self.switch_stats:
-                log.info("Received MAIN_DISPATCHER event. Register datapath: %s", datapath.id)
+                log.debug("Received MAIN_DISPATCHER event. Register datapath: %s", datapath.id)
                 self.switch_stats[datapath.id] = SwitchStats(datapath)
                 req = ofp_parser.OFPPortDescStatsRequest(datapath, 0)
                 datapath.send_msg(req)
@@ -74,9 +60,9 @@ class SimpleMonitor(app_manager.RyuApp):
                                                  cookie_mask)
                 datapath.send_msg(req)
         elif ev.state == DEAD_DISPATCHER:
-            log.info("Received DEAD_DISPATCHER event.")
+            log.debug("Received DEAD_DISPATCHER event.")
             if datapath.id in self.switch_stats:
-                log.info("De-register %s datapath", datapath.id)
+                log.debug("De-register %s datapath", datapath.id)
                 del self.switch_stats[datapath.id]
 
     @staticmethod
@@ -123,7 +109,7 @@ class SimpleMonitor(app_manager.RyuApp):
                 """ :type : list """
                 rrd_data_sources = self._init_rrd_data_sources(port_stats_names)
                 log.debug("Initialized RRD data sources for %s", port_name)
-                log.info("Creating RRD Manager for port %s of %s", port_name, device_name)
+                log.debug("Creating RRD Manager for port %s of %s", port_name, device_name)
                 self.rrd_managers[port_name] = RRDManager(port_name + '.rrd', rrd_data_sources)
             else:
                 log.debug("Skip RRD Manager creation for port %s of %s as it's already available",
@@ -165,15 +151,15 @@ class SimpleMonitor(app_manager.RyuApp):
         data_path_id = ev.msg.datapath.id
         log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(ev.msg.body))
         ss = self.switch_stats[data_path_id]
-        log.info("PORT STATS reply for %s", ss.device_name)
+        log.debug("PORT STATS reply for %s", ss.device_name)
         """ :type : SwitchStats """
         body = ev.msg.body
-        log.info("Updating stats for %s", ss.device_name)
+        log.debug("Updating stats for %s", ss.device_name)
         for port in sorted(body, key=attrgetter('port_no')):
             if int(port.port_no) > 1000:
                 log.debug("Skipping port. Port number: %s", str(port.port_no))
                 continue
-            log.info("Updating stats for %s", ss.get_port_name(port.port_no))
+            log.debug("Updating stats for %s", ss.get_port_name(port.port_no))
             ss.set_rx_bytes(port.port_no, port.rx_bytes)
             ss.set_tx_bytes(port.port_no, port.tx_bytes)
             ss.set_rx_packets(port.port_no, port.rx_packets)
