@@ -128,7 +128,8 @@ class RRDManager(object):
 
             template = ':'.join(data_source_names)
             values = ':'.join(str(value) for value in data_source_values)
-            log.info("Updating %s RRD. Template: %s . Values: %s", self.filename, template, values)
+            log.info("Updating %s RRD", self.filename, template, values)
+            log.debug("Updating %s RRD. Template: %s . Values: %s", self.filename, template, values)
             try:
                 # noinspection PyArgumentList
                 rrdtool.update(self.filename, '-t', template, str(update_time) + ':' + values)
