@@ -6,7 +6,7 @@ import logging
 from os.path import join
 import config
 
-log = logging.getLogger('oshi.monitoring.rrdmanager')
+log = logging.getLogger('oshi_monitoring')
 
 
 class RRDManager(object):

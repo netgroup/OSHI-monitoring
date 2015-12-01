@@ -20,7 +20,7 @@ PORT_STATS = {RX_BYTES, TX_BYTES,
 
 IP_PARTNER_PORT_NUMBER = 'ip_partner_port_number'
 
-log = logging.getLogger('oshi.monitoring.switch_stat')
+log = logging.getLogger('oshi_monitoring')
 
 
 class SwitchStats:
