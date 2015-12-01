@@ -1,5 +1,4 @@
 import logging
-import os
 import config
 
 RX_BYTES = 'rx_bytes'
