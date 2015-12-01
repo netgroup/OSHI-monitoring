@@ -117,4 +117,4 @@ class RRDManager(object):
             except rrdtool.OperationalError:
                 log.exception("Error while updating RRD.")
         else:
-            log.info("No update is necessary as no data sources are defined.")
+            log.debug("No update is necessary as no data sources are defined.")
