@@ -154,8 +154,8 @@ class SimpleMonitor(app_manager.RyuApp):
         data_path_id = ev.msg.datapath.id
         log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(ev.msg.body))
         ss = self.switch_stats[data_path_id]
-        log.debug("PORT STATS reply for %s", ss.device_name)
         """ :type : SwitchStats """
+        log.debug("PORT STATS reply for %s", ss.device_name)
         body = ev.msg.body
         log.debug("Updating stats for %s", ss.device_name)
         for port in sorted(body, key=attrgetter('port_no')):
@@ -201,8 +201,22 @@ class SimpleMonitor(app_manager.RyuApp):
                               str(self.rrd_managers))
             self.last_update_time = time.time()
 
-            log.info("Updated %d RRDs since last log: %s", len(self.rrd_updates_since_last_log),
-                     self.rrd_updates_since_last_log)
+            if config.OUTPUT_LEVEL == config.SUMMARY_OUTPUT:
+                log.info("Updated %d RRDs since last log for %s: %s", len(self.rrd_updates_since_last_log),
+                         ss.device_name, self.rrd_updates_since_last_log)
+            elif config.OUTPUT_LEVEL == config.DETAILED_OUTPUT:
+                log.info("Current values for %s (IP):", ss.device_name)
+                for port_number in port_numbers:
+                    log.info("Port %s (IP): %s:%d, %s:%d, %s:%d, %s:%d", ss.get_port_name(port_number),
+                             switch_stats.RX_BYTES, ss.get_rx_bytes(port_number),
+                             switch_stats.TX_BYTES, ss.get_tx_bytes(port_number),
+                             switch_stats.RX_PACKETS, ss.get_rx_packets(port_number),
+                             switch_stats.TX_PACKETS, ss.get_tx_packets(port_number))
+                    log.info("Port %s (SDN): %s:%d, %s:%d, %s:%d, %s:%d", ss.get_port_name(port_number),
+                             switch_stats.SDN_RX_BYTES, ss.get_sdn_rx_bytes(port_number),
+                             switch_stats.SDN_TX_BYTES, ss.get_sdn_tx_bytes(port_number),
+                             switch_stats.SDN_RX_PACKETS, ss.get_sdn_rx_packets(port_number),
+                             switch_stats.SDN_TX_PACKETS, ss.get_sdn_tx_packets(port_number))
             self.rrd_updates_since_last_log.clear()
             self.last_log_time = current_time
         else:
