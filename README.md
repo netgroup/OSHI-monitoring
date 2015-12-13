@@ -18,8 +18,6 @@ The available options are:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
-    chmod +x manager.sh
-    
     sudo ./manager.sh --mode setup
     ```
 
@@ -31,11 +29,15 @@ The available options are:
     
     sudo ./manager.sh --mode runmininet --topology /home/user/workspace/OSHI-monitoring/example_topologies/simple_topology.json
     ```
-2. xterm to a controller (from the mininet console), i.e. ctr8:
+2A. xterm to a controller (from the mininet console), i.e. ctr8:
     ```
     xterm ctr8
     ```
-    
+2B. you can also ssh to the controller from a host console (you need to check ctr8 IP address in the output of the script that has launched mininet) for example, assuming that the ip address is 10.255.248.1:
+    ```
+    sshpass -p 'root' ssh root@10.255.248.1
+    ```
+
     *Note that the controller must be defined in the topology*
 3. Run RYU (from the controller):
     ```
