@@ -29,17 +29,28 @@ The available options are:
     
     sudo ./manager.sh --mode runmininet --topology /home/user/workspace/OSHI-monitoring/example_topologies/simple_topology.json
     ```
-2A. xterm to a controller (from the mininet console), i.e. ctr8:
+2. Open a shell in the controller 
+    *Note that the controller must be defined in the topology*
+ 
+option a) xterm to a controller (from the mininet console), i.e. ctr8:
     ```
     xterm ctr8
     ```
-2B. you can also ssh to the controller from a host console (you need to check ctr8 IP address in the output of the script that has launched mininet) for example, assuming that the ip address is 10.255.248.1:
+option b) ssh to the controller from a host console (you need to check ctr8 IP address in the output of the script that has launched mininet) for example, assuming that the ip address is 10.255.248.1:
     ```
     sshpass -p 'root' ssh root@10.255.248.1
     ```
 
-    *Note that the controller must be defined in the topology*
-3. Run RYU (from the controller):
+3. Modify /home/user/workspace/OSHI-monitoring/config.py to set the desired output level:
+    ```
+    # OUTPUT Levels
+    NO_OUTPUT = 'NO_OUTPUT'
+    SUMMARY_OUTPUT = 'SUMMARY_OUTPUT'
+    DETAILED_OUTPUT = 'DETAILED_OUTPUT'
+    OUTPUT_LEVEL = NO_OUTPUT
+    ```
+
+4. Run RYU (from the controller):
     ```
     cd /home/user/workspace/OSHI-monitoring
     
