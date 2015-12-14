@@ -13,7 +13,7 @@ ch.setFormatter(formatter)
 log.addHandler(ch)
 
 if config.ENABLE_FILE_LOGGING:
-    fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "complete.log"))
+    fh_complete = logging.FileHandler(os.path.join(config.RRD_LOG_PATH, "OSHI-monitoring.log"))
     fh_complete.setLevel(config.LOG_LEVEL)
     fh_complete.setFormatter(formatter)
     log.addHandler(fh_complete)
