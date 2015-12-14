@@ -41,7 +41,7 @@ fi
 if [[ ${MODE} = 'setup' ]]
 	then
 	  echo "Setting up environment..."
-	  apt-get install rrdtool librrds-perl librrd-dev
+	  apt-get install rrdtool librrds-perl librrd-dev sshpass
 	  pip install rrdtool
 elif [[ ${MODE} = 'runmininet' ]]
 	then
