@@ -22,14 +22,23 @@ The available options are:
     ```
 
 ## Run instructions
+1. Modify /home/user/workspace/OSHI-monitoring/config.py to set the desired output level, if needed:
+    ```
+    # OUTPUT Levels
+    NO_OUTPUT = 'NO_OUTPUT'
+    SUMMARY_OUTPUT = 'SUMMARY_OUTPUT' # How many RRDs where updated since the last update
+    DETAILED_OUTPUT = 'DETAILED_OUTPUT' # Detailed output about RRD updates (current values for each variable)
+    OUTPUT_LEVEL = SUMMARY_OUTPUT
+    ```
 
-1. Run mininet with an included example topology:
+2. Run mininet with an included example topology:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
     sudo ./manager.sh --mode runmininet --topology /home/user/workspace/OSHI-monitoring/example_topologies/simple_topology.json
     ```
-2. Open a shell in the controller 
+    
+3. Open a shell in the controller 
     *Note that the controller must be defined in the topology*
  
 option a) xterm to a controller (from the mininet console), i.e. ctr8:
@@ -39,15 +48,6 @@ option a) xterm to a controller (from the mininet console), i.e. ctr8:
 option b) ssh to the controller from a host console (you need to check ctr8 IP address in the output of the script that has launched mininet) for example, assuming that the ip address is 10.255.248.1:
     ```
     sshpass -p 'root' ssh root@10.255.248.1
-    ```
-
-3. Modify /home/user/workspace/OSHI-monitoring/config.py to set the desired output level:
-    ```
-    # OUTPUT Levels
-    NO_OUTPUT = 'NO_OUTPUT'
-    SUMMARY_OUTPUT = 'SUMMARY_OUTPUT'
-    DETAILED_OUTPUT = 'DETAILED_OUTPUT'
-    OUTPUT_LEVEL = NO_OUTPUT
     ```
 
 4. Run RYU (from the controller):
