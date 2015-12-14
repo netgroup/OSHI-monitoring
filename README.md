@@ -30,7 +30,8 @@ The available options are:
     DETAILED_OUTPUT = 'DETAILED_OUTPUT' # Detailed output about RRD updates (current values for each variable)
     OUTPUT_LEVEL = SUMMARY_OUTPUT
     ```
-
+    *To change the output level you currently need to restart mininet after updating config.py.*
+    
 2. Run mininet with an included example topology:
     ```
     cd /home/user/workspace/OSHI-monitoring
