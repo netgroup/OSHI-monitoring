@@ -2,7 +2,7 @@ import logging
 import os
 import config
 
-version = '1.0.0.dev1'
+version = '1.0.0'
 
 log = logging.getLogger('oshi_monitoring')
 log.setLevel(config.LOG_LEVEL)
