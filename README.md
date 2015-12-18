@@ -30,7 +30,11 @@ The available options are:
     DETAILED_OUTPUT = 'DETAILED_OUTPUT' # Detailed output about RRD updates (current values for each variable)
     OUTPUT_LEVEL = SUMMARY_OUTPUT
     ```
-    *To change the output level you currently need to restart mininet after updating config.py.*
+    you can have a look at what is currently configured in config.py by executing
+    ```
+    ./show_info
+    ```
+    *NB: To change the output level you currently need to restart mininet after updating config.py.*
     
 2. Run mininet with an included example topology:
     ```
@@ -38,15 +42,19 @@ The available options are:
     
     sudo ./manager.sh --mode runmininet --topology /home/user/workspace/OSHI-monitoring/example_topologies/simple_topology.json
     ```
+    this is also available as a script
+    ```
+    ./mininet_example_launcher.sh
+    ```
     
 3. Open a shell in the controller 
     *Note that the controller must be defined in the topology*
  
-option a) xterm to a controller (from the mininet console), i.e. ctr8:
+    option a) xterm to a controller (from the mininet console), i.e. ctr8:
     ```
     xterm ctr8
     ```
-option b) ssh to the controller from a host console (you need to check ctr8 IP address in the output of the script that has launched mininet) for example, assuming that the ip address is 10.255.248.1:
+    option b) ssh to the controller from a host console (you need to check ctr8 IP address in the output of the script that has launched mininet) for example, assuming that the ip address is 10.255.248.1:
     ```
     sshpass -p 'root' ssh root@10.255.248.1
     ```
@@ -57,3 +65,15 @@ option b) ssh to the controller from a host console (you need to check ctr8 IP a
     
     ./manager.sh --mode runryu
     ```
+    
+5. step 3 option b) and step 4 can be unified with
+    ```
+    sshpass -p 'root' ssh -t root@10.255.248.1 'cd /home/user/workspace/OSHI-monitoring; ./manager.sh --mode runryu'
+    ```
+    which in turn is available as a single command:
+    ```
+    ./controller_launcher.sh IP_ADDRESS_OF_CONTROLLER
+    ./controller_launcher.sh 
+    ```
+    the second option (with no parameter) defaults to 10.255.248.1
+    
