@@ -30,13 +30,21 @@ The available options are:
     DETAILED_OUTPUT = 'DETAILED_OUTPUT' # Detailed output about RRD updates (current values for each variable)
     OUTPUT_LEVEL = SUMMARY_OUTPUT
     ```
-    *To change the output level you currently need to restart mininet after updating config.py.*
+    you can have a look at what is currently configured in config.py by executing
+    ```
+    ./show_info
+    ```
+    *NB: To change the output level you currently need to restart mininet after updating config.py.*
     
 2. Run mininet with an included example topology:
     ```
     cd /home/user/workspace/OSHI-monitoring
     
     sudo ./manager.sh --mode runmininet --topology /home/user/workspace/OSHI-monitoring/example_topologies/simple_topology.json
+    ```
+    this is also available as a script
+    ```
+    ./mininet_example_launcher.sh
     ```
     
 3. Open a shell in the controller 
@@ -64,8 +72,8 @@ The available options are:
     ```
     which in turn is available as a single command:
     ```
-    ./launch_controller.sh IP_ADDRESS_OF_CONTROLLER
-    ./launch_controller.sh 
+    ./controller_launcher.sh IP_ADDRESS_OF_CONTROLLER
+    ./controller_launcher.sh 
     ```
     the second option (with no parameter) defaults to 10.255.248.1
     
