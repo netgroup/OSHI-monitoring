@@ -21,7 +21,28 @@ The available options are:
     sudo ./manager.sh --mode setup
     ```
 
-## Run instructions
+## Run instructions (simplified)
+1. Open three terminal shells in /home/user/workspace/OSHI-monitoring and run respectively 
+    ```
+    ./mininet_example_laucher.sh
+    
+    ./controller_launcher.sh
+    
+    ./rrd_rest_launcher.sh
+    ```
+NB for the third step the OSHI-REST-server should be up and running, see https://github.com/netgroup/OSHI-REST-server
+
+2. test the generation of .png using these example REST URLSs
+
+- http://localhost:8000/rrdtool/cro3-eth4/rrdgraph/?rrd_data_source=rx_bytes&time_scale=10_mins
+- http://localhost:8000/rrdtool/cro4-eth2/rrdgraph/?rrd_data_source=rx_bytes&time_scale=10_mins
+    
+3. you can discover the available .rrd files as follows:
+    ```
+    ls -ltr /home/user/workspace/OSHI-monitoring/rrd/
+    ```
+
+## Run instructions (complete)
 1. Modify /home/user/workspace/OSHI-monitoring/config.py to set the desired output level, if needed:
     ```
     # OUTPUT Levels
