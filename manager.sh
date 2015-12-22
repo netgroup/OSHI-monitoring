@@ -47,7 +47,6 @@ elif [[ ${MODE} = 'runmininet' ]]
 	then
 	  echo "Running mininet with topology ${TOPOLOGY}"
 	  cd /home/user/workspace/OSHI-monitoring
-	  find . -name \*.py -exec cp {} /home/user/workspace/dreamer-ryu/ryu/app/ \;
 	  cd /home/user/workspace/dreamer-ryu
 	  python ./setup.py install
 	  cd /home/user/workspace/Dreamer-Mininet-Extensions
@@ -55,9 +54,9 @@ elif [[ ${MODE} = 'runmininet' ]]
 elif [[ ${MODE} = 'runryu' ]]
 	then
 	  echo "Running RYU..."
-	  cd /home/user/workspace/dreamer-ryu/ryu/app/
-	  ryu-manager --observe-links traffic_monitor.py
+	  cd /home/user/workspace/OSHI-monitoring
+	  ryu-manager --observe-links /home/user/workspace/OSHI-monitoring/traffic_monitor.py
 else 
-          echo "Unrecognized option. Available options are: setup, runmininet and runryu. This script will now terminate."
-          exit 1
+	  echo "Unrecognized option. Available options are: setup, runmininet and runryu. This script will now terminate."
+	  exit 1
 fi
