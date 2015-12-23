@@ -24,9 +24,8 @@ class SimpleMonitor(app_manager.RyuApp):
         self.switch_stats = {}
         self.rrd_managers = defaultdict()
         self.monitor_thread = hub.spawn(self._monitor)
-        self.last_update_time = time.time()
-        self.last_log_time = time.time()
-        self.rrd_updates_since_last_log = set()
+        self.last_update_times = {}
+        self.rrd_updates_since_last_log = dict(set())
 
     def _monitor(self):
         log.info("Started monitoring with REQUEST_INTERVAL %s seconds and RRD_STEP %s seconds", config.REQUEST_INTERVAL,
@@ -168,7 +167,8 @@ class SimpleMonitor(app_manager.RyuApp):
 
         # update RRD if necessary
         current_time = time.time()
-        if current_time - self.last_update_time >= config.RRD_STEP:
+        if switch_stat.device_name not in self.last_update_times or current_time - self.last_update_times[
+                switch_stat.device_name] >= config.RRD_STEP:
             log.debug("Updating RRDs")
             port_numbers = switch_stat.ports.keys()
             log.debug("Ports to update: %s", str(port_numbers))
@@ -191,17 +191,18 @@ class SimpleMonitor(app_manager.RyuApp):
                     rrd_manager = self.rrd_managers[switch_stat.get_port_name(port_number)]
                     """ :type : RRDManager """
                     rrd_manager.update(rrd_data_sources_to_update)
-                    self.rrd_updates_since_last_log.add(
+                    self.rrd_updates_since_last_log[switch_stat.device_name].add(
                         switch_stat.device_name + ":" + switch_stat.get_port_name(port_number))
                 else:
                     log.debug("Cannot find RRD manager for %s. Available managers: %s",
                               switch_stat.get_port_name(port_number),
                               str(self.rrd_managers))
-            self.last_update_time = time.time()
+            self.last_update_times[switch_stat.device_name] = time.time()
 
             if config.OUTPUT_LEVEL == config.SUMMARY_OUTPUT:
-                log.info("Updated %d RRDs since last log for %s: %s", len(self.rrd_updates_since_last_log),
-                         switch_stat.device_name, self.rrd_updates_since_last_log)
+                log.info("Updated %d RRDs since last log for %s: %s",
+                         len(self.rrd_updates_since_last_log[switch_stat.device_name]), switch_stat.device_name,
+                         self.rrd_updates_since_last_log[switch_stat.device_name])
             elif config.OUTPUT_LEVEL == config.DETAILED_OUTPUT:
                 log.info("Current values for %s (IP):", switch_stat.device_name)
                 for port_number in port_numbers:
@@ -215,7 +216,6 @@ class SimpleMonitor(app_manager.RyuApp):
                              switch_stats.SDN_TX_BYTES, switch_stat.get_sdn_tx_bytes(port_number),
                              switch_stats.SDN_RX_PACKETS, switch_stat.get_sdn_rx_packets(port_number),
                              switch_stats.SDN_TX_PACKETS, switch_stat.get_sdn_tx_packets(port_number))
-            self.rrd_updates_since_last_log.clear()
-            self.last_log_time = current_time
+            self.rrd_updates_since_last_log[switch_stat.device_name].clear()
         else:
-            log.debug("Queueing up RRD update. Last update time: %s", self.last_update_time)
+            log.debug("Queueing up RRD update. Last update time: %s", self.last_update_times[switch_stat.device_name])
