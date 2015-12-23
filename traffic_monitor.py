@@ -1,21 +1,19 @@
 from collections import defaultdict
-import os
 import re
 from operator import attrgetter
+import time
+import logging
 
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.lib import hub
 from ryu.base import app_manager
-import time
 import config
 from rrd_data_source import RRDDataSource
 from rrdmanager import RRDManager
 from switch_stats import SwitchStats
-import logging
 import switch_stats
-
 
 log = logging.getLogger('oshi_monitoring')
 
@@ -154,68 +152,70 @@ class SimpleMonitor(app_manager.RyuApp):
     def _port_stats_reply_handler(self, ev):
         data_path_id = ev.msg.datapath.id
         log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(ev.msg.body))
-        ss = self.switch_stats[data_path_id]
+        switch_stat = self.switch_stats[data_path_id]
         """ :type : SwitchStats """
-        log.debug("PORT STATS reply for %s", ss.device_name)
+        log.debug("PORT STATS reply for %s", switch_stat.device_name)
         body = ev.msg.body
-        log.debug("Updating stats for %s", ss.device_name)
+        log.debug("Updating stats for %s", switch_stat.device_name)
         for port in sorted(body, key=attrgetter('port_no')):
             if int(port.port_no) > 1000:
                 log.debug("Skipping port. Port number: %s", str(port.port_no))
                 continue
-            log.debug("Updating stats for %s", ss.get_port_name(port.port_no))
-            ss.set_rx_bytes(port.port_no, port.rx_bytes)
-            ss.set_tx_bytes(port.port_no, port.tx_bytes)
-            ss.set_rx_packets(port.port_no, port.rx_packets)
-            ss.set_tx_packets(port.port_no, port.tx_packets)
+            log.debug("Updating stats for %s", switch_stat.get_port_name(port.port_no))
+            switch_stat.set_rx_bytes(port.port_no, port.rx_bytes)
+            switch_stat.set_tx_bytes(port.port_no, port.tx_bytes)
+            switch_stat.set_rx_packets(port.port_no, port.rx_packets)
+            switch_stat.set_tx_packets(port.port_no, port.tx_packets)
 
         # update RRD if necessary
         current_time = time.time()
         if current_time - self.last_update_time >= config.RRD_STEP:
             log.debug("Updating RRDs")
-            port_numbers = ss.ports.keys()
+            port_numbers = switch_stat.ports.keys()
             log.debug("Ports to update: %s", str(port_numbers))
             for port_number in port_numbers:
-                log.debug("Updating port %s", ss.get_port_name(port_number))
-                current_stats = ss.get_current_values(port_number)
-                log.debug("Current stats for port %s (%s): %s", port_number, ss.get_port_name(port_number),
+                log.debug("Updating port %s", switch_stat.get_port_name(port_number))
+                current_stats = switch_stat.get_current_values(port_number)
+                log.debug("Current stats for port %s (%s): %s", port_number, switch_stat.get_port_name(port_number),
                           str(current_stats))
                 rrd_data_sources_to_update = []
-                log.debug("Building RRD data source for port %s and stats: %s", ss.get_port_name(port_number),
+                log.debug("Building RRD data source for port %s and stats: %s", switch_stat.get_port_name(port_number),
                           str(current_stats))
                 for stat_name in current_stats:
                     log.debug("Building RRD data source to update %s", stat_name)
                     # use RRDDataSource object as DTO, so we need only data source name and data source current value
                     rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
-                log.debug("Completed RRD data sources initialization to update %s: %s", ss.device_name,
+                log.debug("Completed RRD data sources initialization to update %s: %s", switch_stat.device_name,
                           str(rrd_data_sources_to_update))
-                if ss.get_port_name(port_number) in self.rrd_managers:
-                    log.debug("Updating RRD for %s.", ss.device_name)
-                    rrd_manager = self.rrd_managers[ss.get_port_name(port_number)]
+                if switch_stat.get_port_name(port_number) in self.rrd_managers:
+                    log.debug("Updating RRD for %s.", switch_stat.device_name)
+                    rrd_manager = self.rrd_managers[switch_stat.get_port_name(port_number)]
                     """ :type : RRDManager """
                     rrd_manager.update(rrd_data_sources_to_update)
-                    self.rrd_updates_since_last_log.add(ss.get_port_name(port_number))
+                    self.rrd_updates_since_last_log.add(
+                        switch_stat.device_name + ":" + switch_stat.get_port_name(port_number))
                 else:
-                    log.debug("Cannot find RRD manager for %s. Available managers: %s", ss.get_port_name(port_number),
+                    log.debug("Cannot find RRD manager for %s. Available managers: %s",
+                              switch_stat.get_port_name(port_number),
                               str(self.rrd_managers))
             self.last_update_time = time.time()
 
             if config.OUTPUT_LEVEL == config.SUMMARY_OUTPUT:
                 log.info("Updated %d RRDs since last log for %s: %s", len(self.rrd_updates_since_last_log),
-                         ss.device_name, self.rrd_updates_since_last_log)
+                         switch_stat.device_name, self.rrd_updates_since_last_log)
             elif config.OUTPUT_LEVEL == config.DETAILED_OUTPUT:
-                log.info("Current values for %s (IP):", ss.device_name)
+                log.info("Current values for %s (IP):", switch_stat.device_name)
                 for port_number in port_numbers:
-                    log.info("Port %s (IP): %s:%d, %s:%d, %s:%d, %s:%d", ss.get_port_name(port_number),
-                             switch_stats.RX_BYTES, ss.get_rx_bytes(port_number),
-                             switch_stats.TX_BYTES, ss.get_tx_bytes(port_number),
-                             switch_stats.RX_PACKETS, ss.get_rx_packets(port_number),
-                             switch_stats.TX_PACKETS, ss.get_tx_packets(port_number))
-                    log.info("Port %s (SDN): %s:%d, %s:%d, %s:%d, %s:%d", ss.get_port_name(port_number),
-                             switch_stats.SDN_RX_BYTES, ss.get_sdn_rx_bytes(port_number),
-                             switch_stats.SDN_TX_BYTES, ss.get_sdn_tx_bytes(port_number),
-                             switch_stats.SDN_RX_PACKETS, ss.get_sdn_rx_packets(port_number),
-                             switch_stats.SDN_TX_PACKETS, ss.get_sdn_tx_packets(port_number))
+                    log.info("Port %s (IP): %s:%d, %s:%d, %s:%d, %s:%d", switch_stat.get_port_name(port_number),
+                             switch_stats.RX_BYTES, switch_stat.get_rx_bytes(port_number),
+                             switch_stats.TX_BYTES, switch_stat.get_tx_bytes(port_number),
+                             switch_stats.RX_PACKETS, switch_stat.get_rx_packets(port_number),
+                             switch_stats.TX_PACKETS, switch_stat.get_tx_packets(port_number))
+                    log.info("Port %s (SDN): %s:%d, %s:%d, %s:%d, %s:%d", switch_stat.get_port_name(port_number),
+                             switch_stats.SDN_RX_BYTES, switch_stat.get_sdn_rx_bytes(port_number),
+                             switch_stats.SDN_TX_BYTES, switch_stat.get_sdn_tx_bytes(port_number),
+                             switch_stats.SDN_RX_PACKETS, switch_stat.get_sdn_rx_packets(port_number),
+                             switch_stats.SDN_TX_PACKETS, switch_stat.get_sdn_tx_packets(port_number))
             self.rrd_updates_since_last_log.clear()
             self.last_log_time = current_time
         else:
