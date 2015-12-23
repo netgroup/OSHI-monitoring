@@ -155,13 +155,12 @@ class SimpleMonitor(app_manager.RyuApp):
         log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(body))
         switch_stat = self.switch_stats[data_path_id]
         """ :type : SwitchStats """
-        log.debug("PORT STATS reply for %s", switch_stat.device_name)
-        log.debug("Updating stats for %s", switch_stat.device_name)
+        log.debug("PORT STATS reply for %s. Updating stats...", switch_stat.device_name)
         for port in sorted(body, key=attrgetter('port_no')):
             if int(port.port_no) > 1000:
-                log.debug("Skipping port. Port number: %s", str(port.port_no))
+                log.debug("Skipping port. Port number: %s. Port: %s", str(port.port_no), str(port))
                 continue
-            log.debug("Updating stats for %s", switch_stat.get_port_name(port.port_no))
+            log.debug("Updating stats for %s port", switch_stat.get_port_name(port.port_no))
             switch_stat.set_rx_bytes(port.port_no, port.rx_bytes)
             switch_stat.set_tx_bytes(port.port_no, port.tx_bytes)
             switch_stat.set_rx_packets(port.port_no, port.rx_packets)
@@ -219,4 +218,4 @@ class SimpleMonitor(app_manager.RyuApp):
             self.rrd_updates_since_last_log.clear()
             self.last_log_time = current_time
         else:
-            log.debug("Queueing up RRD update")
+            log.debug("Queueing up RRD update. Last update time: %s", self.last_update_time)
