@@ -169,14 +169,12 @@ class SimpleMonitor(app_manager.RyuApp):
             ss.set_rx_packets(port.port_no, port.rx_packets)
             ss.set_tx_packets(port.port_no, port.tx_packets)
 
-        port_numbers = ss.ports.keys()
-        log.debug("Ports to update: %s", str(port_numbers))
-
         # update RRD if necessary
         current_time = time.time()
         if current_time - self.last_update_time >= config.RRD_STEP:
-
             log.debug("Updating RRDs")
+            port_numbers = ss.ports.keys()
+            log.debug("Ports to update: %s", str(port_numbers))
             for port_number in port_numbers:
                 log.debug("Updating port %s", ss.get_port_name(port_number))
                 current_stats = ss.get_current_values(port_number)
