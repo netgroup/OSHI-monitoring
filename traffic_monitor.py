@@ -151,11 +151,11 @@ class SimpleMonitor(app_manager.RyuApp):
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
         data_path_id = ev.msg.datapath.id
-        log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(ev.msg.body))
+        body = ev.msg.body
+        log.debug("Received event (EventOFPPortStatsReply). Body: %s", str(body))
         switch_stat = self.switch_stats[data_path_id]
         """ :type : SwitchStats """
         log.debug("PORT STATS reply for %s", switch_stat.device_name)
-        body = ev.msg.body
         log.debug("Updating stats for %s", switch_stat.device_name)
         for port in sorted(body, key=attrgetter('port_no')):
             if int(port.port_no) > 1000:
