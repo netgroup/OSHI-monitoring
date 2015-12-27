@@ -46,7 +46,6 @@ if [[ ${MODE} = 'setup' ]]
 elif [[ ${MODE} = 'runmininet' ]]
 	then
 	  echo "Running mininet with topology ${TOPOLOGY}"
-	  cd /home/user/workspace/OSHI-monitoring
 	  cd /home/user/workspace/dreamer-ryu
 	  python ./setup.py install
 	  cd /home/user/workspace/Dreamer-Mininet-Extensions
