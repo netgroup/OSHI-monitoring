@@ -265,7 +265,7 @@ class SwitchStats:
             return 1
         return 0
 
-    def _update_sdn_stats(self):
+    def update_sdn_stats(self):
         """
         Update SDN stats for every port registered in this SwitchStats
 
@@ -296,7 +296,6 @@ class SwitchStats:
                 log.debug("Updated stats for port %s: %s", port_name, str(port))
 
     def get_current_values(self, port_number):
-        self._update_sdn_stats()
         return {RX_BYTES: self.get_rx_bytes(port_number),
                 TX_BYTES: self.get_tx_bytes(port_number),
                 RX_PACKETS: self.get_rx_packets(port_number),

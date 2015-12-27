@@ -115,7 +115,7 @@ class SimpleMonitor(app_manager.RyuApp):
             else:
                 log.debug("Skip RRD Manager creation for port %s of %s as it's already available",
                           port_name, data_path_id)
-            log.debug("Completed port %s (%s) initialization", port_name, p.port_no)
+            log.debug("Completed port %s initialization", port_name)
 
     @set_ev_cls(ofp_event.EventOFPFlowStatsReply, MAIN_DISPATCHER)
     def _flow_stats_reply_handler(self, ev):
@@ -166,16 +166,22 @@ class SimpleMonitor(app_manager.RyuApp):
             switch_stat.set_tx_packets(port.port_no, port.tx_packets)
 
         # update RRD if necessary
+        log.debug("Checking if a RRD update is necessary. Current last update times: %s", str(self.last_update_times))
+        log.debug("Last RRD update time for %s: %s",
+                  switch_stat.device_name,
+                  self.last_update_times[switch_stat.device_name]
+                  if switch_stat.device_name in self.last_update_times
+                  else "never")
         current_time = time.time()
         if switch_stat.device_name not in self.last_update_times or current_time - self.last_update_times[
                 switch_stat.device_name] >= config.RRD_STEP:
-            log.debug("Updating RRDs")
+            log.debug("Updating RRDs for %s", switch_stat.device_name)
             port_numbers = switch_stat.ports.keys()
-            log.debug("Ports to update: %s", str(port_numbers))
+            switch_stat.update_sdn_stats()
             for port_number in port_numbers:
                 log.debug("Updating port %s", switch_stat.get_port_name(port_number))
                 current_stats = switch_stat.get_current_values(port_number)
-                log.debug("Current stats for port %s (%s): %s", port_number, switch_stat.get_port_name(port_number),
+                log.debug("Current stats for port %s : %s", switch_stat.get_port_name(port_number),
                           str(current_stats))
                 rrd_data_sources_to_update = []
                 log.debug("Building RRD data source for port %s and stats: %s", switch_stat.get_port_name(port_number),
@@ -184,14 +190,15 @@ class SimpleMonitor(app_manager.RyuApp):
                     log.debug("Building RRD data source to update %s", stat_name)
                     # use RRDDataSource object as DTO, so we need only data source name and data source current value
                     rrd_data_sources_to_update.append(RRDDataSource(stat_name, None, None, current_stats[stat_name]))
-                log.debug("Completed RRD data sources initialization to update %s: %s", switch_stat.device_name,
-                          str(rrd_data_sources_to_update))
+                log.debug("Completed RRD data sources initialization to update %s",
+                          switch_stat.get_port_name(port_number))
                 if switch_stat.get_port_name(port_number) in self.rrd_managers:
-                    log.debug("Updating RRD for %s.", switch_stat.device_name)
+                    log.debug("Found RRD manager for %s.", switch_stat.get_port_name(port_number))
                     rrd_manager = self.rrd_managers[switch_stat.get_port_name(port_number)]
                     """ :type : RRDManager """
-                    rrd_manager.update(rrd_data_sources_to_update)
+                    rrd_manager.update(rrd_data_sources_to_update, current_time)
                     if switch_stat.device_name not in self.rrd_updates_since_last_log:
+                        log.debug("Initializing last updates since last log for %s", switch_stat.device_name)
                         self.rrd_updates_since_last_log[switch_stat.device_name] = set()
                     self.rrd_updates_since_last_log[switch_stat.device_name].add(
                         switch_stat.device_name + ":" + switch_stat.get_port_name(port_number))
@@ -200,6 +207,8 @@ class SimpleMonitor(app_manager.RyuApp):
                               switch_stat.get_port_name(port_number),
                               str(self.rrd_managers))
             self.last_update_times[switch_stat.device_name] = time.time()
+            log.debug("Update last update time for %s: %s",
+                      switch_stat.device_name, str(self.last_update_times[switch_stat.device_name]))
 
             if config.OUTPUT_LEVEL == config.SUMMARY_OUTPUT:
                 log.info("Updated %d RRDs since last log for %s: %s",

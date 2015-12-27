@@ -27,8 +27,8 @@ class RRDManager(object):
     ROWS5 = "4"
 
     # noinspection PyMethodMayBeStatic
-    def _get_current_time_in_seconds(self):
-        return int(math.floor(time.time()))
+    def _get_time_in_seconds(self, current_time):
+        return int(math.floor(current_time))
 
     # noinspection PyMethodMayBeStatic
     def _build_rrd_data_source(self, data_source_name, data_source_type, heartbeat):
@@ -52,9 +52,6 @@ class RRDManager(object):
         self.filename = join(config.RRD_STORE_PATH, rrd_file_name)
         log.debug("Built new RRD file name: %s", self.filename)
 
-        self.last_update_time = 0
-        """ :type : int """
-
         # build RRD data sources
         data_sources = []
 
@@ -75,41 +72,37 @@ class RRDManager(object):
         log.debug("Prepared RRD initialization. Data sources: %s", data_sources)
         if len(data_sources) > 0:
             # noinspection PyArgumentList
+            start_time = str(self._get_time_in_seconds(time.time()))
             rrdtool.create(self.filename,
                            '--step',
                            str(config.RRD_STEP),
                            '--start',
-                           str(self._get_current_time_in_seconds()),
+                           start_time,
                            data_sources,
                            'RRA:AVERAGE:' + self.XFF1 + ':' + self.STEP1 + ':' + self.ROWS1,  # every 5 mins for 2 hrs
                            'RRA:AVERAGE:' + self.XFF2 + ':' + self.STEP2 + ':' + self.ROWS2,  # every 30 mins for 5 hrs
                            'RRA:AVERAGE:' + self.XFF3 + ':' + self.STEP3 + ':' + self.ROWS3,  # every 1 hrs for 1 day
                            'RRA:AVERAGE:' + self.XFF4 + ':' + self.STEP4 + ':' + self.ROWS4,  # every day for a week
                            'RRA:AVERAGE:' + self.XFF5 + ':' + self.STEP5 + ':' + self.ROWS5)  # every week for 4 weeks
-            log.debug("%s initialized", self.filename)
+            log.debug("%s initialized with start time: %s", self.filename, start_time)
+            # sleep for 1 second to avoid update conflicts (minimum step is 1 second)
+            time.sleep(1)
         else:
             log.debug("No data sources initialized, skipping RRD file creation.")
 
-    def update(self, rrd_data_sources):
+    def update(self, rrd_data_sources, update_time):
         if len(rrd_data_sources) > 0:
-
-            update_time = self._get_current_time_in_seconds()
-
-            # check if the step is more than 1 second (minimum)
-            if update_time - self.last_update_time < 1:
-                log.debug("Skipping update as it occurred less than a second after the last update.")
-                return
-
             data_source_names = []
             data_source_values = []
-
             for rrd_data_source in rrd_data_sources:
                 data_source_names.append(rrd_data_source.name)
                 data_source_values.append(rrd_data_source.temp_value)
 
             template = ':'.join(data_source_names)
             values = ':'.join(str(value) for value in data_source_values)
-            log.debug("Updating %s RRD. Template: %s . Values: %s", self.filename, template, values)
+            update_time = self._get_time_in_seconds(update_time)
+            log.debug("Updating %s. Update time: %s, template: %s, values: %s", self.filename, update_time,
+                      template, values)
             try:
                 # noinspection PyArgumentList
                 rrdtool.update(self.filename, '-t', template, str(update_time) + ':' + values)

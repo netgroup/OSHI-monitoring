@@ -9,8 +9,8 @@ BASE_PATH = "/home/user/workspace/OSHI-monitoring/"
 # Logging configuration
 RRD_LOG_PATH = BASE_PATH + "logs/"
 TRAFFIC_MONITOR_LOG_PATH = BASE_PATH + "logs/"
-LOG_LEVEL = logging.DEBUG
-ENABLE_FILE_LOGGING = True
+LOG_LEVEL = logging.INFO
+ENABLE_FILE_LOGGING = False
 
 log = logging.getLogger('oshi_monitoring')
 log.setLevel(LOG_LEVEL)
@@ -35,7 +35,7 @@ log.info("Current logging level: %s", LOG_LEVEL)
 NO_OUTPUT = 'NO_OUTPUT'
 SUMMARY_OUTPUT = 'SUMMARY_OUTPUT'  # How many RRDs where updated since the last update
 DETAILED_OUTPUT = 'DETAILED_OUTPUT'  # Detailed output about RRD updates (current values for each variable)
-OUTPUT_LEVEL = DETAILED_OUTPUT
+OUTPUT_LEVEL = SUMMARY_OUTPUT
 
 # Traffic monitor config
 REQUEST_INTERVAL = 1
