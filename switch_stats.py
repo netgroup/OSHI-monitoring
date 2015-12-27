@@ -143,7 +143,7 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        log.debug("Update %s stat for %s datapath, port %s with value: %s", stat_key, self.data_path_id, port_number,
+        log.debug("Update %s stat for %s, port %s with value: %s", stat_key, self.device_name, port_number,
                   stat_value)
         port = self.ports[port_number]
         log.debug("Current values for port %s, stat %s. Value: %s", port_number, stat_key, port[stat_key])
