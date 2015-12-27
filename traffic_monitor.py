@@ -210,11 +210,12 @@ class SimpleMonitor(app_manager.RyuApp):
             log.debug("Update last update time for %s: %s",
                       switch_stat.device_name, str(self.last_update_times[switch_stat.device_name]))
 
-            if config.OUTPUT_LEVEL == config.SUMMARY_OUTPUT:
+            if config.OUTPUT_LEVEL == config.SUMMARY_OUTPUT or config.OUTPUT_LEVEL == config.DETAILED_OUTPUT:
                 log.info("Updated %d RRDs since last log for %s: %s",
                          len(self.rrd_updates_since_last_log[switch_stat.device_name]), switch_stat.device_name,
                          self.rrd_updates_since_last_log[switch_stat.device_name])
-            elif config.OUTPUT_LEVEL == config.DETAILED_OUTPUT:
+
+            if config.OUTPUT_LEVEL == config.DETAILED_OUTPUT:
                 log.info("Current values for %s (IP):", switch_stat.device_name)
                 for port_number in port_numbers:
                     log.info("Port %s (IP): %s:%d, %s:%d, %s:%d, %s:%d", switch_stat.get_port_name(port_number),
