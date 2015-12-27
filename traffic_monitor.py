@@ -25,7 +25,7 @@ class SimpleMonitor(app_manager.RyuApp):
         self.rrd_managers = defaultdict()
         self.monitor_thread = hub.spawn(self._monitor)
         self.last_update_times = {}
-        self.rrd_updates_since_last_log = dict(set())
+        self.rrd_updates_since_last_log = {}
 
     def _monitor(self):
         log.info("Started monitoring with REQUEST_INTERVAL %s seconds and RRD_STEP %s seconds", config.REQUEST_INTERVAL,
@@ -191,6 +191,8 @@ class SimpleMonitor(app_manager.RyuApp):
                     rrd_manager = self.rrd_managers[switch_stat.get_port_name(port_number)]
                     """ :type : RRDManager """
                     rrd_manager.update(rrd_data_sources_to_update)
+                    if switch_stat.device_name not in self.rrd_updates_since_last_log:
+                        self.rrd_updates_since_last_log[switch_stat.device_name] = set()
                     self.rrd_updates_since_last_log[switch_stat.device_name].add(
                         switch_stat.device_name + ":" + switch_stat.get_port_name(port_number))
                 else:
