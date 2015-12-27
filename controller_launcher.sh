@@ -17,4 +17,4 @@ fi
 
 
 #sshpass -p 'root' ssh -t root@10.255.248.1 'cd /home/user/workspace/OSHI-monitoring; ./manager.sh --mode runryu'
-printandexec "sshpass -p 'root' ssh -t root@$CONTROLLER_IP 'cd /home/user/workspace/OSHI-monitoring; ./manager.sh --mode runryu'"
+printandexec "sshpass -p 'root' ssh -t root@$CONTROLLER_IP -o StrictHostKeyChecking=no 'cd /home/user/workspace/OSHI-monitoring; ./manager.sh --mode runryu'"
