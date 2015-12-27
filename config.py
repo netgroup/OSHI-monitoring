@@ -29,6 +29,7 @@ if ENABLE_FILE_LOGGING:
     log.info("Enabled logging on file in %s", log_file_path)
 
 log.propagate = False
+log.info("Current logging level: %s", LOG_LEVEL)
 
 # OUTPUT Levels
 NO_OUTPUT = 'NO_OUTPUT'
