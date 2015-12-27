@@ -70,8 +70,8 @@ class SwitchStats:
         :param port_number:
         :param partner_port_number:
         """
-        log.debug("Setting partner port number for port %s (%s). Partner: %s (%s)", port_number,
-                  self.get_port_name(port_number), partner_port_number, self.get_port_name(partner_port_number))
+        log.debug("Setting partner port number for port %s. Partner: %s", self.get_port_name(port_number),
+                  self.get_port_name(partner_port_number))
         self.ports[port_number][IP_PARTNER_PORT_NUMBER] = partner_port_number
 
     def get_ip_partner_port_number(self, port_number):
@@ -143,15 +143,19 @@ class SwitchStats:
         :param lldp_noise: LLDP traffic to subtract to rx_bytes, defaults to 0
         :return:
         """
-        log.debug("Update %s stat for %s, port %s with value: %s", stat_key, self.device_name, port_number,
-                  stat_value)
+        log.debug("Update %s stat for %s, port %s with value: %s", stat_key, self.device_name,
+                  self.get_port_name(port_number), stat_value)
         port = self.ports[port_number]
-        log.debug("Current values for port %s, stat %s. Value: %s", port_number, stat_key, port[stat_key])
+        log.debug("Current values for port %s, stat %s. Value: %s", self.get_port_name(port_number), stat_key,
+                  port[stat_key])
         updated_value = stat_value - lldp_noise
-        log.debug("Updating %s for port %s with value: %s", stat_key, port_number, updated_value)
+        log.debug("Updating %s for port %s with value: %s", stat_key, self.get_port_name(port_number),
+                  updated_value)
         port[stat_key] += updated_value
-        log.debug("New value for %s for port %s with value: %s", stat_key, port_number, port[stat_key])
-        log.debug("Current values for port %s, stat %s. Current value: %s", port_number, stat_key, port[stat_key])
+        log.debug("New value for %s for port %s with value: %s", stat_key, self.get_port_name(port_number),
+                  port[stat_key])
+        log.debug("Current values for port %s, stat %s. Current value: %s", self.get_port_name(port_number), stat_key,
+                  port[stat_key])
 
     def set_rx_bytes(self, port_number, rx_bytes, lldp_noise=0):
         """
@@ -244,8 +248,8 @@ class SwitchStats:
             else:
                 ip_partner_port_number = self.get_ip_partner_port_number(port_number)
                 res = self.ports[port_number][grand_total_stat] - self.ports[ip_partner_port_number][stat_to_subtract]
-                log.debug("Computing SDN stat for port %s (%s): %s (%s:%s:%s) - %s (%s:%s:%s) = %s",
-                          port_number, port_name,
+                log.debug("Computing SDN stat for port %s: %s (%s:%s:%s) - %s (%s:%s:%s) = %s",
+                          port_name,
                           self.ports[port_number][grand_total_stat], port_number, port_name, grand_total_stat,
                           self.ports[ip_partner_port_number][stat_to_subtract], port_number, port_name,
                           stat_to_subtract, res)
@@ -268,28 +272,28 @@ class SwitchStats:
         :return:
         """
         self.__seconds_from_start += 1
-        log.debug("Updating SDN stats for all ports of %s datapath. Seconds from start: %s", self.data_path_id,
+        log.debug("Updating SDN stats for all ports of %s. Seconds from start: %s", self.device_name,
                   self.__seconds_from_start)
         for port_number in self.ports:
             port_name = self.get_port_name(port_number)
-            log.debug("Updating SDN stats for port %s (%s)", port_number, port_name)
+            log.debug("Updating SDN stats for port %s", port_name)
             port = self.ports[port_number]
-            log.debug("Current stats for port %s (%s): %s", port_number, port_name, str(port))
+            log.debug("Current stats for port %s: %s", port_name, str(port))
             if self.ports[port_number][IS_VIRTUAL]:
-                log.debug("Skip SDN stats update for port %s (%s) because it's a virtual port", port_number, port_name)
+                log.debug("Skip SDN stats update for port %s because it's a virtual port", port_name)
             else:
                 # initialization
                 rx_noise = SwitchStats._has_rx_lldp_noise(self.get_port_name(port_number), port_number)
                 lldp_noise_bytes = self.__seconds_from_start * config.LLDP_NOISE_BYTE_S
                 lldp_noise_packets = self.__seconds_from_start * config.LLDP_NOISE_PACK_S
-                log.debug("LLDP Noise for port %s (%s). LLDP Noise BYTES: %s, Packets: %s. RX_NOISE: %s", port_number,
-                          port_name, lldp_noise_bytes, lldp_noise_packets, rx_noise)
+                log.debug("LLDP Noise for port %s. LLDP Noise BYTES: %s, Packets: %s. RX_NOISE: %s", port_name,
+                          lldp_noise_bytes, lldp_noise_packets, rx_noise)
                 # update SDN stats
                 port[SDN_RX_BYTES] = self.__compute_sdn_rx_bytes(port_number) + lldp_noise_bytes * rx_noise
                 port[SDN_TX_BYTES] = self.__compute_sdn_tx_bytes(port_number) - lldp_noise_bytes
                 port[SDN_RX_PACKETS] = self.__compute_sdn_rx_packets(port_number) + lldp_noise_packets * rx_noise
                 port[SDN_TX_PACKETS] = self.__compute_sdn_tx_packets(port_number) - lldp_noise_packets
-                log.debug("Updated stats for port %s (%s): %s", port_number, port_name, str(port))
+                log.debug("Updated stats for port %s: %s", port_name, str(port))
 
     def get_current_values(self, port_number):
         self._update_sdn_stats()
