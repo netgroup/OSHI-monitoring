@@ -4,6 +4,7 @@ from operator import attrgetter
 import time
 import logging
 
+import requests
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
 from ryu.controller.handler import set_ev_cls
@@ -202,6 +203,16 @@ class SimpleMonitor(app_manager.RyuApp):
                         self.rrd_updates_since_last_log[switch_stat.device_name] = set()
                     self.rrd_updates_since_last_log[switch_stat.device_name].add(
                         switch_stat.device_name + ":" + switch_stat.get_port_name(port_number))
+
+                    # Build the dict to send to elasticsearch
+                    update_data = {'device_name': switch_stat.device_name,
+                                   'port_number': port_number,
+                                   'port_name': switch_stat.get_port_name(port_number),
+                                   'current_values': switch_stat.get_current_values(port_number)}
+                    log.debug("Data to send to Elasticsearch: %s", update_data)
+                    log.debug("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)
+                    r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
+                    log.debug("Sent to Elasticsearch. Response code: %s", r.status_code)
                 else:
                     log.debug("Cannot find RRD manager for %s. Available managers: %s",
                               switch_stat.get_port_name(port_number),

@@ -47,3 +47,6 @@ RRD_STEP = 30
 RRD_STORE_PATH = BASE_PATH + "rrd/"
 RRD_DATA_SOURCE_TYPE = "GAUGE"
 RRD_DATA_SOURCE_HEARTBEAT = "60"
+
+# Elasticsearch config
+ELASTIC_SEARCH_URL = "http://localhost:8080/oshi-monitoring/traffic"
