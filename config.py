@@ -50,3 +50,14 @@ RRD_DATA_SOURCE_HEARTBEAT = "60"
 
 # Elasticsearch config
 ELASTIC_SEARCH_URL = "http://localhost:8080/oshi-monitoring/traffic"
+LOGSTASH_OUTPUT_PATH = BASE_PATH + "logstash_output/"
+
+log_file_path = os.path.join(LOGSTASH_OUTPUT_PATH, "logstash-output.log")
+# TODO implement a rolling file appender
+fh_logstash = logging.FileHandler(log_file_path)
+fh_logstash.setLevel(logging.INFO)
+# TODO create new formatter
+fh_logstash.setFormatter(formatter)
+log_logstash = logging.getLogger('oshi_monitoring_logstash')
+log_logstash.addHandler(fh_logstash)
+log_logstash.info("Enabled logstash output on file in %s", log_file_path)
