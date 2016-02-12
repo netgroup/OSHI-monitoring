@@ -211,8 +211,11 @@ class SimpleMonitor(app_manager.RyuApp):
                                    'current_values': switch_stat.get_current_values(port_number)}
                     log.debug("Data to send to Elasticsearch: %s", update_data)
                     log.debug("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)
-                    r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
-                    log.debug("Sent to Elasticsearch. Response code: %s", r.status_code)
+                    try:
+                        r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
+                        log.debug("Sent to Elasticsearch. Response code: %s", r.status_code)
+                    except ConnectionError:
+                        log.exception("Connection error while sending data to Elasticsearch.")
                 else:
                     log.debug("Cannot find RRD manager for %s. Available managers: %s",
                               switch_stat.get_port_name(port_number),
