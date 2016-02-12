@@ -214,7 +214,7 @@ class SimpleMonitor(app_manager.RyuApp):
                     try:
                         r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
                         log.debug("Sent to Elasticsearch. Response code: %s", r.status_code)
-                    except ConnectionError:
+                    except requests.ConnectionError:
                         log.exception("Connection error while sending data to Elasticsearch.")
                 else:
                     log.debug("Cannot find RRD manager for %s. Available managers: %s",
