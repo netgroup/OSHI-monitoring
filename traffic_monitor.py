@@ -210,10 +210,10 @@ class SimpleMonitor(app_manager.RyuApp):
                                    'port_name': switch_stat.get_port_name(port_number),
                                    'current_values': switch_stat.get_current_values(port_number)}
                     log.debug("Data to send to Elasticsearch: %s", update_data)
-                    log.debug("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)
+                    log.info("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)
                     try:
                         r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
-                        log.debug("Sent to Elasticsearch. Response code: %s", r.status_code)
+                        log.info("Data sent to Elasticsearch. Response code: %s", r.status_code)
                     except requests.ConnectionError:
                         log.exception("Connection error while sending data to Elasticsearch.")
                 else:
