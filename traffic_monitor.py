@@ -1,3 +1,4 @@
+import json
 from collections import defaultdict
 import re
 from operator import attrgetter
@@ -17,6 +18,7 @@ from switch_stats import SwitchStats
 import switch_stats
 
 log = logging.getLogger('oshi_monitoring')
+logstash_log = logging.getLogger('oshi_monitoring_logstash')
 
 
 class SimpleMonitor(app_manager.RyuApp):
@@ -212,13 +214,20 @@ class SimpleMonitor(app_manager.RyuApp):
                     log.debug("Data to send to Elasticsearch: %s", update_data)
 
                     log.info("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)
+                    r = None
                     try:
                         r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
-                        log.info("Data sent to Elasticsearch. Response code: %s", r.status_code)
+                        log.info("Request sent to Elasticsearch. Response code: %s", r.status_code)
                     except requests.ConnectionError:
                         log.exception("Connection error while sending data to Elasticsearch.")
 
-                    log.info("Writing on results file for Logstash in %s", )
+                    # if HTTP connection is not available, write on file to use logstash file handler
+                    if r is None or r.status_code != 200:
+                        log.info("Logstash is not available via HTTP. Falling back to file output.")
+                        logstash_line = json.dumps(update_data)
+                        log.info("Writing on results file for Logstash in %s. Data: %s", config.LOGSTASH_OUTPUT_PATH,
+                                 logstash_line)
+                        logstash_log.info(logstash_line)
                 else:
                     log.debug("Cannot find RRD manager for %s. Available managers: %s",
                               switch_stat.get_port_name(port_number),
