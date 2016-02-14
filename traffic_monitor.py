@@ -219,11 +219,11 @@ class SimpleMonitor(app_manager.RyuApp):
                         r = requests.post(config.ELASTIC_SEARCH_URL, json=update_data)
                         log.info("Request sent to Elasticsearch. Response code: %s", r.status_code)
                     except requests.ConnectionError:
-                        log.exception("Connection error while sending data to Elasticsearch.")
+                        log.warn("Connection error while sending data to Elasticsearch.")
 
                     # if HTTP connection is not available, write on file to use logstash file handler
                     if r is None or r.status_code != 200:
-                        log.info("Logstash is not available via HTTP. Falling back to file output.")
+                        log.warn("Logstash is not available via HTTP. Falling back to file output.")
                         logstash_line = json.dumps(update_data)
                         log.info("Writing on results file for Logstash in %s. Data: %s", config.LOGSTASH_OUTPUT_PATH,
                                  logstash_line)
