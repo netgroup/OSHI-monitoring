@@ -5,6 +5,7 @@ from operator import attrgetter
 import time
 import logging
 
+import datetime
 import requests
 from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, DEAD_DISPATCHER
@@ -210,7 +211,9 @@ class SimpleMonitor(app_manager.RyuApp):
                     update_data = {'device_name': switch_stat.device_name,
                                    'port_number': port_number,
                                    'port_name': switch_stat.get_port_name(port_number),
-                                   'current_values': switch_stat.get_current_values(port_number)}
+                                   'current_values': switch_stat.get_current_values(port_number),
+                                   'timestamp': datetime.datetime.fromtimestamp(time.time())
+                                       .strftime('%Y-%m-%d %H:%M:%S')}
                     log.debug("Data to send to Elasticsearch: %s", update_data)
 
                     log.info("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)

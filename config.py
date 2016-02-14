@@ -56,7 +56,7 @@ LOGSTASH_OUTPUT_PATH = BASE_PATH + "logstash_output/"
 logstash_log_file_path = os.path.join(LOGSTASH_OUTPUT_PATH, "logstash-output.log")
 fh_logstash = RotatingFileHandler(logstash_log_file_path, maxBytes=1000000, backupCount=2, delay=True)
 fh_logstash.setLevel(logging.INFO)
-logstash_formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logstash_formatter = logging.Formatter('%(message)s')
 fh_logstash.setFormatter(logstash_formatter)
 log_logstash = logging.getLogger('oshi_monitoring_logstash')
 log_logstash.addHandler(fh_logstash)
