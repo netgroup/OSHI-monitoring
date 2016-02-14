@@ -54,10 +54,10 @@ LOGSTASH_OUTPUT_PATH = BASE_PATH + "logstash_output/"
 
 # Logstash config (file), when HTTP is not available
 logstash_log_file_path = os.path.join(LOGSTASH_OUTPUT_PATH, "logstash-output.log")
-fh_logstash = RotatingFileHandler(logstash_log_file_path, maxBytes=1024, backupCount=1, delay=True)
+fh_logstash = RotatingFileHandler(logstash_log_file_path, maxBytes=1024000, backupCount=1, delay=True)
 fh_logstash.setLevel(logging.INFO)
 logstash_formatter = logging.Formatter('%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 fh_logstash.setFormatter(logstash_formatter)
 log_logstash = logging.getLogger('oshi_monitoring_logstash')
 log_logstash.addHandler(fh_logstash)
-log_logstash.info("Enabled logstash output on file in %s", logstash_log_file_path)
+log.info("Enabled logstash output on file in %s", logstash_log_file_path)
