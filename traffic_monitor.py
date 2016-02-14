@@ -212,8 +212,8 @@ class SimpleMonitor(app_manager.RyuApp):
                                    'port_number': port_number,
                                    'port_name': switch_stat.get_port_name(port_number),
                                    'current_values': switch_stat.get_current_values(port_number),
-                                   'timestamp': datetime.datetime.fromtimestamp(time.time())
-                                       .strftime('%Y-%m-%d %H:%M:%S')}
+                                   'timestamp': datetime.datetime.fromtimestamp(time.time()).isoformat()
+                                   }
                     log.debug("Data to send to Elasticsearch: %s", update_data)
 
                     log.info("Sending data to Elasticsearch @ %s", config.ELASTIC_SEARCH_URL)
